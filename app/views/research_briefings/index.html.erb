@@ -1,0 +1,20 @@
+<% content_for :title do %>
+  <h2>Research Briefings<%= @title %></h2>
+<% end %>
+
+<% content_for :content do %>
+  <div class="pager pager-top">
+    <div class="row">
+      <div class="col-md-5">
+        <div class="info"><%= pagy_info(@pagy).html_safe %></div>
+        </div>
+        <div class="col-md-7">
+          <div class="page-select"><%= pagy_nav(@pagy).html_safe %></div>
+        </div>
+      </div>
+    </div>
+  <div id="index">
+  <%= render partial: "card", collection: @items, as: :item %>
+  </div>
+<% end %>
+<%= render template: "layouts/application" %>

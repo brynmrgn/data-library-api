@@ -1,0 +1,50 @@
+<div class="card">
+  <a href="/deposited-papers/<%= item.id %>" class="card">
+  <div class="card-inner">
+    <div class="content">
+      <div class="primary-info"><%= item.data_object['http://purl.org/dc/terms/identifier'] %>: 
+        <% if item.data_object['http://purl.org/dc/terms/abstract'] %>
+          <%= item.data_object['http://purl.org/dc/terms/abstract'] %>
+        <% else %>
+          No description available.
+        <% end %>
+      </div>
+      <div class="secondary-info">
+      Deposited by: 
+        <% if item.data_object['http://data.parliament.uk/schema/parl#department'] %>
+          <%= raw(terms_no_link ( item.data_object['http://data.parliament.uk/schema/parl#department']) ) %> 
+        <% else %>
+          <%= "No Department" %>
+        <% end %>
+      </div>
+      <div class="tertiary-info">
+        Author: 
+        <% if item.data_object['http://data.parliament.uk/schema/parl#corporateAuthor'] %>
+          <%= raw(terms_no_link ( item.data_object['http://data.parliament.uk/schema/parl#corporateAuthor']) ) %>
+        <% else %>
+        <%= "No Author" %>
+        <% end %>
+      </div>
+    </div>
+    <div class="info">
+      <div class="info-inner">
+        <div class="indicators-left">
+          <div class="indicator indicator-label">Subjects: 
+          <% if item.data_object['http://purl.org/dc/terms/subject'] %>
+            <%= raw(terms_no_link ( item.data_object['http://purl.org/dc/terms/subject'])) %>
+          <% end %>  
+
+          </div>
+        </div>
+        <div class="indicators-right">
+          <div class="indicator">House: 
+            <% if item.data_object['http://data.parliament.uk/schema/parl#legislature'] %>
+              <%= raw(terms_no_link ( item.data_object['http://data.parliament.uk/schema/parl#legislature'])) %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </a>
+</div>

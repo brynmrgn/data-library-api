@@ -1,0 +1,64 @@
+<% content_for :content do %>
+<h2><%= @item.data_object['http://purl.org/dc/terms/title'] %></h2>
+
+<p>
+<% if @item.data_object['http://purl.org/dc/terms/description'] %>
+    <%= @item.data_object['http://purl.org/dc/terms/description'] %>
+<% else %> 
+    No document available.
+<% end %>
+</p>
+
+<ul>
+  <li>Published date: 
+    <% if @item.data_object['http://purl.org/dc/terms/date'] %>
+      <%= DateTime.parse(@item.data_object['http://purl.org/dc/terms/date']["@value"]).strftime("%d %B %Y") %>
+    <% else %>
+      No date available.
+    <% end %>
+  </li>
+<li>Identifier: <%= @item.data_object['http://purl.org/dc/terms/identifier'] %></li>
+<li>Topics: 
+<% if @item.data_object['http://data.parliament.uk/schema/parl#topic'] %>
+    <%= raw(terms_with_link ( @item.data_object['http://data.parliament.uk/schema/parl#topic']), 'topic' ) %>
+<% end %>
+</li>
+
+<li>Subjects:  
+<% if @item.data_object['http://purl.org/dc/terms/subject'] %>
+    <%= raw(terms_with_link ( @item.data_object['http://purl.org/dc/terms/subject']), 'subject' ) %>
+<% end %>
+</li>
+
+<li>Publisher:  
+<% if @item.data_object['http://purl.org/dc/terms/publisher'] %>
+    <%= raw(terms_with_link ( @item.data_object['http://purl.org/dc/terms/publisher']), 'publisher' ) %>
+<% end %>
+</li>
+
+<li>
+<a href="<%= @item.data_object['http://data.parliament.uk/schema/parl#externalLocation']["@id"] %>">View on parliament.uk</a>
+<% if @item.data_object['http://data.parliament.uk/schema/parl#contentLocation'] %>
+    | 
+    <a href="<%= @item.data_object['http://data.parliament.uk/schema/parl#contentLocation']["@id"] %>">Read document</a>
+<% end %>
+</li>
+</ul>
+
+<% if @item.data_object['http://data.parliament.uk/schema/parl#htmlsummary'] %>
+<%= "#{ CGI::unescapeHTML(@item.data_object['http://data.parliament.uk/schema/parl#htmlsummary']) }".html_safe %>
+<% else %>
+No summary available.
+<% end %>
+
+<!-- A comment -->
+
+
+<hr>
+<details>
+  <summary>Object details</summary>
+    <%= @item.data_object %>
+</details>
+<%= link_to "Back", deposited_papers_path %>
+<% end %>
+<%= render template: "layouts/application" %>

@@ -1,0 +1,28 @@
+<body id="body">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    // Function to handle download
+    function downloadFunction() {
+        hideButtons();
+        const element = document.getElementById('body');
+        const formattedDate = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+        const options = {
+            margin: 10,
+            filename: 'FileName_' + formattedDate + '.pdf',
+            image: { type: 'jpeg', quality: 1.0 },
+            html2canvas: { scale: 4 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf(element, options);
+        showButtons();
+    }
+</script>
+
+<button onclick="downloadFunction()">Download this WebPage as PDF</button>
+
+<p>
+the quick brown fox jumped over the lazy dogs
+</p>
+
+</body>
