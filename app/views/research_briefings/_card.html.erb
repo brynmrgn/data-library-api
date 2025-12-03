@@ -25,12 +25,12 @@
     <div class="info">
       <div class="info-inner">
         <div class="indicators-left">
-          Topic: 
-        <% if item.data_object['http://data.parliament.uk/schema/parl#topic'] %>
-          <%= raw(terms_no_link ( item.data_object['http://data.parliament.uk/schema/parl#topic']) ) %>
-        <% else %>
-        <%= "No Topic" %>
-        <% end %>
+          Topics: 
+          <% if item.data_object['http://data.parliament.uk/schema/parl#topic'] %>
+            <%= raw(terms_no_link ( item.data_object['http://data.parliament.uk/schema/parl#topic']) ) %>
+          <% else %>
+            <%= "No Topics" %>
+          <% end %>
         </div>
         <div class="indicators-right">
           
