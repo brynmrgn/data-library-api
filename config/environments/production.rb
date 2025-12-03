@@ -89,4 +89,11 @@ Rails.application.configure do
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 
   config.serve_static_assets = true
+
+  # Only use SolidCache if we're not precompiling assets
+  if ENV['ASSETS_PRECOMPILE'].blank?
+    config.cache_store = :solid_cache_store
+  else
+    config.cache_store = :null_store
+  end
 end

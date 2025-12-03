@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-ENV['DB_ADAPTER'] = 'nulldb' if ARGV.include?('assets:precompile')
+ENV['ASSETS_PRECOMPILE'] = 'true' if ARGV.include?('assets:precompile')
 require_relative "../config/boot"
 require "rake"
-Rake.application.run
+Rake.applicati
