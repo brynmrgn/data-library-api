@@ -2,4 +2,4 @@
 ENV['ASSETS_PRECOMPILE'] = 'true' if ARGV.include?('assets:precompile')
 require_relative "../config/boot"
 require "rake"
-Rake.applicati
+Rake.application.run
