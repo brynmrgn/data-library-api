@@ -26,6 +26,7 @@ module DataLibraryBrowser
     # config.eager_load_paths << Rails.root.join("extras")
     config.log_level = :warn # In any environment initializer, or
     #Rails.logger.level = 0 # at any time
+    config.assets.initialize_on_precompile = false if ENV['RAILS_ENV'] == 'production'
 
   end
 end
