@@ -29,25 +29,25 @@ No description available.
 <!-- A comment -->
 <p>Deposited by:
 <% if @item.data_object['http://data.parliament.uk/schema/parl#department'] %>
-    <%= raw(terms_with_link ( @item.data_object['http://data.parliament.uk/schema/parl#department']), 'depositing-department' ) %> 
+    <%= raw(terms_with_link ( @item.data_object['http://data.parliament.uk/schema/parl#department']), 'depositing-department' , deposited_papers_path) %> 
 <% end %>
 </p>
 
 <p>Corporate author: 
 <% if @item.data_object['http://data.parliament.uk/schema/parl#corporateAuthor'] %>
-    <%= raw(terms_with_link ( @item.data_object['http://data.parliament.uk/schema/parl#corporateAuthor']), 'corporate-author' ) %>
+    <%= raw(terms_with_link ( @item.data_object['http://data.parliament.uk/schema/parl#corporateAuthor']), 'corporate-author', deposited_papers_path ) %>
 <% end %>
 </p>
 
 <p>Subjects:  
 <% if @item.data_object['http://purl.org/dc/terms/subject'] %>
-    <%= raw(terms_with_link ( @item.data_object['http://purl.org/dc/terms/subject']), 'subject' ) %>
+    <%= raw(terms_with_link ( @item.data_object['http://purl.org/dc/terms/subject']), 'subject', deposited_papers_path ) %>
 <% end %>
 </p>
 
 <p>Houses:  
 <% if @item.data_object['http://data.parliament.uk/schema/parl#legislature'] %>
-    <%= raw(terms_with_link ( @item.data_object['http://data.parliament.uk/schema/parl#legislature']), 'legislature' ) %>
+    <%= raw(terms_with_link ( @item.data_object['http://data.parliament.uk/schema/parl#legislature']), 'legislature', deposited_papers_path ) %>
 <% end %>
 </p>
 
