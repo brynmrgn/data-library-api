@@ -1,4 +1,5 @@
 module TermsHelper
+    # not sure why I need this if I'm getting IDs and labels from my SPARQL queries already.
 
     def get_term_label ( term_id )
         require 'json'

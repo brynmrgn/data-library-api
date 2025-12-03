@@ -11,7 +11,7 @@
         <% end %>
       </div>
       <div class="secondary-info">
-        <%= item.data_object['http://purl.org/dc/terms/identifier'] %> | <%= DateTime.parse(item.data_object['http://purl.org/dc/terms/date']["@value"]).strftime("%d %B %Y") %>
+        <%= raw(terms_no_link ( item.data_object['http://purl.org/dc/terms/publisher']) ) %> | <%= item.data_object['http://purl.org/dc/terms/identifier'] %> | <%= DateTime.parse(item.data_object['http://purl.org/dc/terms/date']["@value"]).strftime("%d %B %Y") %>
         <br>
         <% if item.data_object['http://purl.org/dc/terms/description'] %>
           <%= item.data_object['http://purl.org/dc/terms/description'] %> 

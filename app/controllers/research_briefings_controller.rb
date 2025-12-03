@@ -24,7 +24,16 @@ class ResearchBriefingsController < ApplicationController
       when 'publisher'
         filter_type = "dc-term:publisher"
         @title = ": published by: #{term_label}"
-      end
+      when 'section'
+        filter_type = "<http://data.parliament.uk/schema/parl#section>"
+        @title = ": Section: #{term_label}"
+      when 'subtype'
+        filter_type = "<http://data.parliament.uk/schema/parl#subtype>"
+        @title = ": Type: #{term_label}"
+      when 'category'
+        filter_type = "<http://data.parliament.uk/schema/parl#category>"
+        @title = ": Category: #{term_label}"
+      end 
 
       filter = "?item #{filter_type} ?term .
       FILTER (?term IN (<http://data.parliament.uk/terms/#{params[:id]}>))"

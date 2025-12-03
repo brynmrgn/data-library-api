@@ -17,6 +17,9 @@ construct {
 		<http://data.parliament.uk/schema/parl#topic> ?topic ;
     	dc-term:subject ?subject ;
         dc-term:publisher ?publisher ;
+    	<http://data.parliament.uk/schema/parl#subtype> ?subType ;
+    	<http://data.parliament.uk/schema/parl#section> ?section ;
+    	<http://data.parliament.uk/schema/parl#category> ?category ;
   		<http://data.parliament.uk/schema/parl#contentLocation> ?pdfLocation ;
     	<http://data.parliament.uk/schema/parl#externalLocation> ?externalLocation ;
   		<http://data.parliament.uk/schema/parl#htmlsummary> ?htmlSummary .
@@ -27,6 +30,12 @@ construct {
   		skos:prefLabel ?subjectLabel .
     ?publisher a dc-term:publisher ;
     	skos:prefLabel ?publisherLabel .
+  	?section a <http://data.parliament.uk/schema/parl#section> ;
+    	skos:prefLabel ?sectionLabel .
+  	?subType a <http://data.parliament.uk/schema/parl#subtype> ;
+    	skos:prefLabel ?subTypeLabel .
+  	?category a <http://data.parliament.uk/schema/parl#category> ;
+    	skos:prefLabel ?categoryLabel .
 } 
 where {
 	?item dc-term:title ?title ;
@@ -38,8 +47,14 @@ where {
   		?subject skos:prefLabel ?subjectLabel}
     OPTIONAL {?item dc-term:publisher ?publisher .
   		?publisher skos:prefLabel ?publisherLabel}
+    OPTIONAL {?item <http://data.parliament.uk/schema/parl#section> ?section .
+        ?section skos:prefLabel ?sectionLabel}
+    OPTIONAL {?item <http://data.parliament.uk/schema/parl#subtype> ?subType .
+        ?subType skos:prefLabel ?subTypeLabel}  
+    OPTIONAL {?item <http://data.parliament.uk/schema/parl#category> ?category .
+        ?category skos:prefLabel ?categoryLabel}  
     OPTIONAL {?item <http://data.parliament.uk/schema/parl#contentLocation> ?pdfLocation .}
-  OPTIONAL {?item <http://data.parliament.uk/schema/parl#externalLocation> ?externalLocation .}
+    OPTIONAL {?item <http://data.parliament.uk/schema/parl#externalLocation> ?externalLocation .}
     OPTIONAL {?item <http://data.parliament.uk/schema/parl#htmlsummary> ?htmlSummary .}
 
   	{select ?item ?date
@@ -63,8 +78,10 @@ where {
   			},
 		"http://data.parliament.uk/schema/parl#topic": {"@embed": "@always"},
 		"http://purl.org/dc/terms/subject": {"@embed": "@always"},
-		"http://purl.org/dc/terms/publisher": {"@embed": "@always"}
-
+		"http://purl.org/dc/terms/publisher": {"@embed": "@always"},
+		"http://data.parliament.uk/schema/parl#section": {"@embed": "@always"},
+		"http://data.parliament.uk/schema/parl#subtype": {"@embed": "@always"},
+		"http://data.parliament.uk/schema/parl#category": {"@embed": "@always"}
 		}
 		'''
 	end 

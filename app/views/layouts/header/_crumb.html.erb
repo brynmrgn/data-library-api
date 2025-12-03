@@ -1,10 +1,15 @@
 <div class="context-nav context-nav-brand" role="navigation" aria-label="Breadcrumb">
   <div class="container">
     <ul class="breadcrumb">
-      <li><a href="https://www.parliament.uk">UK Parliament</a></li>
-      <li><%= link_to "Data Library", root_path %></li>
-      <li><%= link_to "Deposited Papers", deposited_papers_path %></li>
-      <li>Deposited Papers</li>
+      <% breadcrumbs.each do |crumb| %>
+        <li>
+          <% if crumb[:url] %>
+            <%= link_to crumb[:label], crumb[:url] %>
+          <% else %>
+            <%= crumb[:label] %>
+          <% end %>
+        </li>
+      <% end %>
     </ul>
   </div>
 </div>

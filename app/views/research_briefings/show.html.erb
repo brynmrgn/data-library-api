@@ -18,6 +18,14 @@
     <% end %>
   </li>
 <li>Identifier: <%= @item.data_object['http://purl.org/dc/terms/identifier'] %></li>
+<li>Type: 
+<% if @item.data_object['http://data.parliament.uk/schema/parl#subtype'] %>
+    <%= raw(terms_with_link(@item.data_object['http://data.parliament.uk/schema/parl#subtype'], 'subtype' , research_briefings_path)) %>
+<% end %>
+<% if @item.data_object['http://data.parliament.uk/schema/parl#category'] %>
+   | <%= raw(terms_with_link(@item.data_object['http://data.parliament.uk/schema/parl#category'], 'category' , research_briefings_path)) %>
+<% end %>
+</li>
 <li>Topics: 
 <% if @item.data_object['http://data.parliament.uk/schema/parl#topic'] %>
     <%= raw(terms_with_link(@item.data_object['http://data.parliament.uk/schema/parl#topic'], 'topic' , research_briefings_path)) %>
@@ -33,6 +41,9 @@
 <li>Publisher:  
 <% if @item.data_object['http://purl.org/dc/terms/publisher'] %>
     <%= raw(terms_with_link(@item.data_object['http://purl.org/dc/terms/publisher'], 'publisher' , research_briefings_path)) %>
+<% end %>
+<% if @item.data_object['http://data.parliament.uk/schema/parl#section'] %>
+  | <%= raw(terms_with_link(@item.data_object['http://data.parliament.uk/schema/parl#section'], 'section' , research_briefings_path)) %>
 <% end %>
 </li>
 
