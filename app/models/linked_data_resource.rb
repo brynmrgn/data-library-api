@@ -63,15 +63,6 @@ class LinkedDataResource
   alias_method :deposited_at, :date
   alias_method :published_at, :date
   alias_method :created_at, :date
-
-  def partial_path
-    case self.class.name
-        when 'DepositedPaper'
-            'deposited_papers/card'
-        when 'ResearchBriefing'
-            'research_briefings/card'
-    end
-  end
   
   protected
   
@@ -85,8 +76,6 @@ class LinkedDataResource
     date_received || date_published || date_created || date_modified
   end
 
-
-  
   private
   
   def extract_date(*keys)

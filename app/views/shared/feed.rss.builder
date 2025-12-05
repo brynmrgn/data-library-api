@@ -11,7 +11,7 @@ xml.rss version: "2.0" do
       xml.item do
         xml.title item.title
         xml.description item.abstract if item.respond_to?(:abstract)
-        xml.pubDate item.date.to_time.rfc822 if item.date.present?
+        xml.pubDate item.date.rfc822 if item.date.present?
         xml.link "#{request.base_url}/#{rss_config[:link_base]}/#{item.id}"
         xml.guid "#{request.base_url}/#{rss_config[:link_base]}/#{item.id}"
       end

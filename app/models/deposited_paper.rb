@@ -95,8 +95,12 @@ end
   # Get display information for RSS feed
   def abstract
     data['http://purl.org/dc/terms/abstract']
+  end 
+
+  def date
+  date_received || Time.now # Fallback to current time if no date
   end
-  
+
   protected
   
   # Deposited papers sort by date received

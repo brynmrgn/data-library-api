@@ -13,6 +13,7 @@ construct {
 		dc-term:title ?title ;
 		dc-term:identifier ?identifier;
 		dc-term:abstract ?abstract;
+		<http://data.parliament.uk/schema/parl#dateReceived> ?date ;
 		<http://data.parliament.uk/schema/parl#corporateAuthor> ?corporateAuthor ;
 		dc-term:subject ?subject ;
 		<http://data.parliament.uk/schema/parl#department> ?depositingDepartment ;
@@ -31,11 +32,12 @@ construct {
 where {
 	?item dc-term:title ?title ;
 		dc-term:identifier ?identifier;
+		<http://data.parliament.uk/schema/parl#dateReceived> ?date .
 	OPTIONAL {?item <http://data.parliament.uk/schema/parl#corporateAuthor> ?corporateAuthor .
     	?corporateAuthor skos:prefLabel ?corporateAuthorLabel .}
 	OPTIONAL {?item <http://data.parliament.uk/schema/parl#legislature> ?legislature .
         ?legislature skos:prefLabel ?legislatureLabel .}
-	OPTIONAL {?item dc-term:abstract ?abstract .}
+	?item dc-term:abstract ?abstract .
 	OPTIONAL {?item dc-term:subject ?subject .
   		?subject skos:prefLabel ?subjectLabel}
 	OPTIONAL {?item <http://data.parliament.uk/schema/parl#department> ?depositingDepartment .
