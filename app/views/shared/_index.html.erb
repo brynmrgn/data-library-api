@@ -2,21 +2,39 @@
   <div style="display: flex; align-items: center; gap: 0.5rem;">
     <h2 style="margin: 0;"><%= @model_class.page_title %><%= @title %></h2>
     <%= link_to @model_class.feed_path, class: "rss-link", title: "Subscribe to RSS feed" do %>
-      <%= image_tag "rss-icon.svg", alt: "RSS Feed", class: "rss-icon", style: "width: 16px; height: 16px;" %>
+      <%= image_tag "rss-icon.svg", alt: "RSS Feed", class: "rss-icon", style: "width: 16px; height: px;" %>
     <% end %>
   </div>
 <% end %>
 
 <% content_for :content do %>
-  <%== pagy_nav(@pagy) if @pagy %>
-  
   <div id="index">
+    <% if @pagy %>
+      <div class="pagination-wrapper">
+        <div class="pagination-info">
+          <p>Showing <%= @pagy.from %>-<%= @pagy.to %> of <%= @pagy.count %> items</p>
+        </div>
+        <div class="pagination-nav">
+          <%== pagy_nav(@pagy) %>
+        </div>
+      </div>
+    <% end %>
+    
     <% @items.each do |item| %>
       <%= render partial: 'shared/card', locals: { item: item } %>
     <% end %>
+    
+    <% if @pagy %>
+      <div class="pagination-wrapper">
+        <div class="pagination-info">
+          <p>Showing <%= @pagy.from %>-<%= @pagy.to %> of <%= @pagy.count %> items</p>
+        </div>
+        <div class="pagination-nav">
+          <%== pagy_nav(@pagy) %>
+        </div>
+      </div>
+    <% end %>
   </div>
-  
-  <%== pagy_nav(@pagy) if @pagy %>
 <% end %>
 
 <%= render template: "layouts/application" %>

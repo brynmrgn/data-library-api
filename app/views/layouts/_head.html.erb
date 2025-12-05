@@ -38,6 +38,33 @@
   align-items: center;
   gap: .5rem;
 }
+.pagination-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin: 1rem 0 !important;
+  padding: 0.75rem !important;
+  background-color: #f5f5f5 !important;
+  border-radius: 4px !important;
+}
+
+.pagination-info p {
+  margin: 0 !important;
+  color: #666 !important;
+  font-size: 1.2rem !important;
+}
+
+.pagination-nav {
+  margin-left: 2rem !important;
+}
+
+/* Style the pagination links */
+.pagination-nav nav a,
+.pagination-nav nav span {
+  font-size: 1.2rem !important;
+  margin: 0 0.01rem !important;
+  padding: 0.25rem 0.5rem !important;
+}
 
 		</style>
 		<%= csrf_meta_tags %>

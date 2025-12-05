@@ -69,26 +69,20 @@ end
   
   def tertiary_info
     {
-      label: "Author",
-      value: data['http://data.parliament.uk/schema/parl#corporateAuthor'],
-      default: "No Author",
-      format: :terms_no_link
+      # Empty for deposited papers
     }
   end
   
   def indicators_left
-    {
-      label: "Subjects",
-      value: data['http://purl.org/dc/terms/subject'],
+   {
+      value: data['http://data.parliament.uk/schema/parl#legislature'],
       format: :terms_no_link
     }
   end
   
   def indicators_right
     {
-      label: "House",
-      value: data['http://data.parliament.uk/schema/parl#legislature'],
-      format: :terms_no_link
+      # Empty for deposited papers
     }
   end
 
