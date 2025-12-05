@@ -1,6 +1,8 @@
 # app/controllers/content_controller.rb
 class ObjectController < ApplicationController
   include Sparql::Get::Response
+  include SparqlItemsCount
+
   
   def index
     model_name = params[:controller_name].classify
@@ -44,9 +46,10 @@ class ObjectController < ApplicationController
     page  = params[:page].to_i
     page  = 1 if page < 1
 
-    total = get_items_count(filter)
+    type_key = model_name.underscore.to_sym
+    count = SparqlItemsCount.get_items_count(type_key, filter)
 
-    @pagy = Pagy.new(count: total, limit: $DEFAULT_RESULTS_PER_PAGE, page: page)
+    @pagy = Pagy.new(count: count, limit: $DEFAULT_RESULTS_PER_PAGE, page: page)
 
     @items = get_items(
       filter,
@@ -55,6 +58,11 @@ class ObjectController < ApplicationController
     )
     
     render partial: 'shared/index'
+
+    respond_to do |format|
+      format.html
+      format.json { render json: index_json }
+    end
   end
 
 def show
@@ -110,5 +118,29 @@ def feed
   
   render template: 'shared/feed', layout: false
 end 
+
+private
+
+private
+
+  def index_json
+    {
+      model: @model_class.name,
+      total_count: @pagy.count,
+      page: @pagy.page,
+      per_page: @pagy.limit,
+      items: @items.map { |item| item_to_json(item) }
+    }
+  end
+
+  def item_to_json(item)
+    {
+      id: item.to_param,
+      title: item.data['http://purl.org/dc/terms/title'],
+      identifier: item.data['http://purl.org/dc/terms/identifier'],
+      date: item.data['http://purl.org/dc/terms/date'] || item.data['http://data.parliament.uk/schema/parl#dateReceived'],
+      url: item_path(item)
+    }
+  end 
 
 end

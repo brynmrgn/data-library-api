@@ -1,5 +1,6 @@
 # app/models/deposited_paper.rb
 class DepositedPaper < LinkedDataResource
+  include ApplicationHelper
   TERM_TYPE_MAPPINGS = {
     'subject' => { predicate: 'dc-term:subject', label: 'subject' },
     'publisher' => { predicate: 'dc-term:publisher', label: 'published by' },
@@ -14,6 +15,16 @@ class DepositedPaper < LinkedDataResource
     description: 'Latest deposited papers from the UK Parliament',
     link_base: 'deposited-papers'
   }.freeze
+
+  def card_data
+    {
+      primary_info: {text: primary_info_text},
+      secondary_info: {text: secondary_info_text},
+      tertiary_info: {text: tertiary_info_text},
+      indicators_left: {text: indicators_left_text},
+      indicators_right: {text: indicators_right_text}
+    }
+  end
   
   def initialize(id:, data:)
     super(id: id, data: data, resource_type: :deposited_paper)
@@ -42,49 +53,6 @@ class DepositedPaper < LinkedDataResource
   def self.feed_path
     Rails.application.routes.url_helpers.feed_deposited_papers_path
   end
-  # Get display information for cards and detail views
-  def primary_info
-  identifier = data['http://purl.org/dc/terms/identifier'] || ""
-  abstract = data['http://purl.org/dc/terms/abstract']
-  
-  text = if abstract && !abstract.empty?
-    "#{identifier} - #{abstract}"
-  else
-    identifier
-  end
-  
-  {
-    text: text
-  }
-end
-  
-  def secondary_info
-    {
-      label: "Deposited by",
-      value: data['http://data.parliament.uk/schema/parl#department'],
-      default: "No Department",
-      format: :terms_no_link  # tells the view which helper to use
-    }
-  end
-  
-  def tertiary_info
-    {
-      # Empty for deposited papers
-    }
-  end
-  
-  def indicators_left
-   {
-      value: data['http://data.parliament.uk/schema/parl#legislature'],
-      format: :terms_no_link
-    }
-  end
-  
-  def indicators_right
-    {
-      # Empty for deposited papers
-    }
-  end
 
   # Get display information for RSS feed
   def abstract
@@ -95,6 +63,29 @@ end
   date_received || Time.now # Fallback to current time if no date
   end
 
+  private
+  def primary_info_text
+    title = data['http://purl.org/dc/terms/abstract'] || "No title available."
+    title 
+  end
+  def secondary_info_text
+    identifier = data['http://purl.org/dc/terms/identifier'] || "No identifier available."
+    identifier
+  end
+  def tertiary_info_text
+    department = data['http://data.parliament.uk/schema/parl#department']
+    terms = terms_no_link(department)
+    "Deposited by: #{terms}" if terms
+  end
+  def indicators_left_text
+    date = self.date_received
+    date.strftime("Received on: %d %B %Y") if date
+  end
+  def indicators_right_text
+    legislature = data['http://data.parliament.uk/schema/parl#legislature']
+    terms = terms_no_link(legislature)
+    "House: #{terms}" if terms  
+  end
   protected
   
   # Deposited papers sort by date received

@@ -112,16 +112,4 @@ where {
 		'''
 	end 
 
-	def items_count_query(filter)
-		"
-		PREFIX parl: <http://data.parliament.uk/schema/parl#>
-		PREFIX dc-term:<http://purl.org/dc/terms/>
-		SELECT (COUNT(DISTINCT ?item) AS ?total)
-		WHERE {
-			?item a parl:ResearchBriefing ;
-			  dc-term:date ?date .
-			#{filter}
-		}
-		"
-	end
 end

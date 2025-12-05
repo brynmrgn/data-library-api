@@ -72,7 +72,3 @@ end
 gem "sqlite3", ">= 2.1"
 gem 'activerecord-nulldb-adapter'
 
-# Design system gem
-#gem "library_design", github: "ukparliament/design-assets", glob: 'library_design/*.gemspec', tag: "0.6.2"
-
-
