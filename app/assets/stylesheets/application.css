@@ -1,18 +1,14 @@
 /*
- *= require_tree .
+ *= require bootstrap-4.6.2
+ *= require fontawesome-5.15.4
+ *= require pds-design-system
+ *= require library-extras-1.0.0
+ *= require print
  *= require_self
  */
 
-@charset "UTF-8";
-@import "custom";
+/* Your custom variations below */
 
-
-/*!
- * Bootstrap v4.6.2 (https://getbootstrap.com/)
- * Copyright 2011-2022 The Bootstrap Authors
- * Copyright 2011-2022 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
- */
 
 
 :root {
