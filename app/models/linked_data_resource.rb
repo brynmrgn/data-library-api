@@ -1,5 +1,7 @@
 # app/models/linked_data_resource.rb
 class LinkedDataResource
+    include SparqlHttpHelper
+    
   attr_reader :id, :data, :resource_type
   
   def initialize(id:, data:, resource_type: nil)

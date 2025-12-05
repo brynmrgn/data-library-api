@@ -1,4 +1,5 @@
 module Sparql::Get::ResearchBriefings
+  include SparqlHttpHelper
  
   def get_items(filter = "", offset: nil, limit: nil)
     # a method to get an array of research briefings (for index page)
@@ -28,11 +29,8 @@ module Sparql::Get::ResearchBriefings
 
   def get_items_count(filter)
     request_body = items_count_query(filter)
-    response = Net::HTTP.post($SPARQL_REQUEST_URI, request_body, $SPARQL_COUNT_HEADERS)
+    response = sparql_post($SPARQL_REQUEST_URI, request_body, $SPARQL_COUNT_HEADERS)
     data = JSON.parse(response.body)
     total = data["results"]["bindings"][0]["total"]["value"].to_i
-    
-    # We return the count
-    total
   end
 end

@@ -1,4 +1,5 @@
 module Sparql::Get::DepositedPapers
+    include SparqlHttpHelper
 
     def get_items(filter = "", offset: nil, limit: nil)
         # a method to get an array of deposited papers (for index page)
@@ -19,12 +20,9 @@ module Sparql::Get::DepositedPapers
     end
 
     def get_items_count(filter)
-        request_body = items_count_query(filter)
-        response = Net::HTTP.post( $SPARQL_REQUEST_URI, request_body, $SPARQL_COUNT_HEADERS )  
-        data = JSON.parse(response.body)
-        total = data["results"]["bindings"][0]["total"]["value"].to_i
-  
-        # We return the count
-        total
+    request_body = items_count_query(filter)
+    response = sparql_post($SPARQL_REQUEST_URI, request_body, $SPARQL_COUNT_HEADERS)
+    data = JSON.parse(response.body)
+    total = data["results"]["bindings"][0]["total"]["value"].to_i
     end
 end
