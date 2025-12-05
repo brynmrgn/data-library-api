@@ -10,10 +10,9 @@ module Sparql::Get::DepositedPapers
         # if only one response, then make array
         items = data['@graph'].presence || [data]
 
-
         list_items = items.map do |item|
             list_item_id = item['@id'].sub('http://data.parliament.uk/depositedpapers/', '')
-            DepositedPaper.new(id: list_item_id, data_object: item)
+            DepositedPaper.new(id: list_item_id, data: item)
         end
 
         list_items
@@ -21,11 +20,11 @@ module Sparql::Get::DepositedPapers
 
     def get_items_count(filter)
         request_body = items_count_query(filter)
-        response = Net::HTTP.post( $SPARQL_REQUEST_URI, request_body, $SPARQL_COUNT_HEADERS )
+        response = Net::HTTP.post( $SPARQL_REQUEST_URI, request_body, $SPARQL_COUNT_HEADERS )  
         data = JSON.parse(response.body)
         total = data["results"]["bindings"][0]["total"]["value"].to_i
-        
-        #We return the count
+  
+        # We return the count
         total
     end
 end

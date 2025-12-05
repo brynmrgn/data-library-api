@@ -1,0 +1,105 @@
+<% content_for :content do %>
+<h2><%= @item.data['http://purl.org/dc/terms/title'] %></h2>
+
+<p>
+<% if @item.data['http://purl.org/dc/terms/description'] %>
+    <%= @item.data['http://purl.org/dc/terms/description'] %>
+<% else %> 
+    No document available.
+<% end %>
+</p>
+
+<ul>
+  <li>Published date: 
+    <% if @item.data['http://purl.org/dc/terms/date'] %>
+      <%= DateTime.parse(@item.data['http://purl.org/dc/terms/date']["@value"]).strftime("%d %B %Y") %>
+    <% else %>
+      No date available.
+    <% end %>
+  </li>
+<li>Identifier: <%= @item.data['http://purl.org/dc/terms/identifier'] %></li>
+<li>Type: 
+<% if @item.data['http://data.parliament.uk/schema/parl#subtype'] %>
+    <%= raw(terms_with_link(@item.data['http://data.parliament.uk/schema/parl#subtype'], 'subtype' , research_briefings_path)) %>
+<% end %>
+<% if @item.data['http://data.parliament.uk/schema/parl#category'] %>
+   | <%= raw(terms_with_link(@item.data['http://data.parliament.uk/schema/parl#category'], 'category' , research_briefings_path)) %>
+<% end %>
+</li>
+<li>Topics: 
+<% if @item.data['http://data.parliament.uk/schema/parl#topic'] %>
+    <%= raw(terms_with_link(@item.data['http://data.parliament.uk/schema/parl#topic'], 'topic' , research_briefings_path)) %>
+<% end %>
+</li>
+
+<li>Subjects:  
+<% if @item.data['http://purl.org/dc/terms/subject'] %>
+    <%= raw(terms_with_link(@item.data['http://purl.org/dc/terms/subject'], 'subject' , research_briefings_path)) %>
+<% end %>
+</li>
+
+<li>Publisher:  
+<% if @item.data['http://purl.org/dc/terms/publisher'] %>
+    <%= raw(terms_with_link(@item.data['http://purl.org/dc/terms/publisher'], 'publisher' , research_briefings_path)) %>
+<% end %>
+<% if @item.data['http://data.parliament.uk/schema/parl#section'] %>
+  | <%= raw(terms_with_link(@item.data['http://data.parliament.uk/schema/parl#section'], 'section' , research_briefings_path)) %>
+<% end %>
+</li>
+
+<li>
+<a href="<%= @item.data['http://data.parliament.uk/schema/parl#externalLocation']["@id"] %>">View on parliament.uk</a>
+<% if @item.data['http://data.parliament.uk/schema/parl#contentLocation'] %>
+    | 
+    <a href="<%= @item.data['http://data.parliament.uk/schema/parl#contentLocation']["@id"] %>">Read document</a>
+<% end %>
+</li>
+
+<% if @item.data['http://data.parliament.uk/schema/parl#relatedLink'] %>
+    <li>Related links: 
+        <%= @item.data['http://data.parliament.uk/schema/parl#relatedLink'].map { |link| link_to(link['http://www.w3.org/2000/01/rdf-schema#label'], link['http://schema.org/url']['@id'], target: '_blank', rel: 'noopener') }.join(', ').html_safe %>
+    </li>
+<% end %>
+
+<% if @item.data['http://data.parliament.uk/schema/parl#attachment'] %>
+  <% attachment = @item.data['http://data.parliament.uk/schema/parl#attachment'] %>
+  <% if attachment.is_a?(Hash) %>
+    <li>Attachments: 
+      <%= link_to(
+        attachment['http://purl.org/dc/terms/title'],
+        attachment.dig('http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileUrl', '@id'),
+        target: '_blank',
+        rel: 'noopener'
+      ) %>
+    </li>
+  <% elsif attachment.is_a?(Array) %>
+    <li>Attachments: 
+      <%= attachment.map { |att| 
+        link_to(att['http://purl.org/dc/terms/title'], 
+                att.dig('http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileUrl', '@id'),
+                target: '_blank',
+                rel: 'noopener')
+      }.join(', ').html_safe %>
+    </li>
+  <% end %>
+<% end %>
+
+</ul>
+
+<% if @item.data['http://data.parliament.uk/schema/parl#htmlsummary'] %>
+<%= "#{ CGI::unescapeHTML(@item.data['http://data.parliament.uk/schema/parl#htmlsummary']) }".html_safe %>
+<% else %>
+No summary available.
+<% end %>
+
+<!-- A comment -->
+
+
+<hr>
+<details>
+  <summary>Object details</summary>
+    <%= @item.data %>
+</details>
+<%= link_to "Back", deposited_papers_path %>
+<% end %>
+<%= render template: "layouts/application" %>

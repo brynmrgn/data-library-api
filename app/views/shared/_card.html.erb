@@ -1,0 +1,84 @@
+<div class="card">
+  <a href="<%= url_for(item) %>" class="card">
+    <div class="card-inner">
+      <div class="content">
+        <% primary = item.primary_info %>
+        <div class="primary-info">
+          <% if primary[:label] %>
+            <%= primary[:label] %>: 
+          <% end %>
+          <%= primary[:text] %>
+        </div>
+        
+        <% secondary = item.secondary_info %>
+        <div class="secondary-info">
+          <% if secondary[:label] %>
+            <%= secondary[:label] %>: 
+          <% end %>
+          
+          <% if secondary[:metadata] %>
+            <%= raw(terms_no_link(secondary[:metadata][:publisher])) %> | 
+            <%= secondary[:metadata][:identifier] %> | 
+            <%= secondary[:metadata][:date] %>
+            <br>
+            <%= secondary[:description] %>
+          <% elsif secondary[:value] %>
+            <%= raw(terms_no_link(secondary[:value])) %>
+          <% elsif secondary[:default] %>
+            <%= secondary[:default] %>
+          <% end %>
+        </div>
+        
+        <% tertiary = item.tertiary_info %>
+        <% if tertiary[:label] || tertiary[:value] %>
+          <div class="tertiary-info">
+            <% if tertiary[:label] %>
+              <%= tertiary[:label] %>: 
+            <% end %>
+            <% if tertiary[:value] %>
+              <%= raw(terms_no_link(tertiary[:value])) %>
+            <% elsif tertiary[:default] %>
+              <%= tertiary[:default] %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+      
+      <div class="info">
+        <div class="info-inner">
+          <div class="indicators-left">
+            <% left = item.indicators_left %>
+            <% if left[:label] || left[:value] %>
+              <div class="indicator indicator-label">
+                <% if left[:label] %>
+                  <%= left[:label] %>: 
+                <% end %>
+                <% if left[:value] %>
+                  <%= raw(terms_no_link(left[:value])) %>
+                <% elsif left[:default] %>
+                  <%= left[:default] %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+          
+          <div class="indicators-right">
+            <% right = item.indicators_right %>
+            <% if right[:label] || right[:value] %>
+              <div class="indicator">
+                <% if right[:label] %>
+                  <%= right[:label] %>: 
+                <% end %>
+                <% if right[:value] %>
+                  <%= raw(terms_no_link(right[:value])) %>
+                <% elsif right[:default] %>
+                  <%= right[:default] %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </a>
+</div>

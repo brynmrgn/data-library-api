@@ -9,7 +9,7 @@ PREFIX dc-term:<http://purl.org/dc/terms/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 construct { 
-	?depositedPaper a <http://data.parliament.uk/schema/parl#DepositedPaper>; 
+	?item a <http://data.parliament.uk/schema/parl#DepositedPaper>; 
 		dc-term:title ?title ;
 		dc-term:identifier ?identifier;
 		dc-term:abstract ?abstract;
@@ -29,23 +29,23 @@ construct {
       	skos:prefLabel ?legislatureLabel .
 } 
 where {
-	?depositedPaper dc-term:title ?title ;
+	?item dc-term:title ?title ;
 		dc-term:identifier ?identifier;
-	OPTIONAL {?depositedPaper <http://data.parliament.uk/schema/parl#corporateAuthor> ?corporateAuthor .
+	OPTIONAL {?item <http://data.parliament.uk/schema/parl#corporateAuthor> ?corporateAuthor .
     	?corporateAuthor skos:prefLabel ?corporateAuthorLabel .}
-	OPTIONAL {?depositedPaper <http://data.parliament.uk/schema/parl#legislature> ?legislature .
+	OPTIONAL {?item <http://data.parliament.uk/schema/parl#legislature> ?legislature .
         ?legislature skos:prefLabel ?legislatureLabel .}
-	OPTIONAL {?depositedPaper dc-term:abstract ?abstract .}
-	OPTIONAL {?depositedPaper dc-term:subject ?subject .
+	OPTIONAL {?item dc-term:abstract ?abstract .}
+	OPTIONAL {?item dc-term:subject ?subject .
   		?subject skos:prefLabel ?subjectLabel}
-	OPTIONAL {?depositedPaper <http://data.parliament.uk/schema/parl#department> ?depositingDepartment .
+	OPTIONAL {?item <http://data.parliament.uk/schema/parl#department> ?depositingDepartment .
 		?depositingDepartment skos:prefLabel ?depositingDepartmentLabel .}
-	OPTIONAL {?depositedPaper <http://data.parliament.uk/schema/parl#indexStatus> ?indexingStatus .}
-	OPTIONAL {?depositedPaper <http://data.parliament.uk/schema/parl#depositedFile> ?depositedFile .}
-  	{select ?depositedPaper
+	OPTIONAL {?item <http://data.parliament.uk/schema/parl#indexStatus> ?indexingStatus .}
+	OPTIONAL {?item <http://data.parliament.uk/schema/parl#depositedFile> ?depositedFile .}
+  	{select ?item
 		WHERE { 
-    		?depositedPaper a <http://data.parliament.uk/schema/parl#DepositedPaper> . 
-    		?depositedPaper	<http://data.parliament.uk/schema/parl#dateReceived> ?date .
+    		?item a <http://data.parliament.uk/schema/parl#DepositedPaper> . 
+    		?item	<http://data.parliament.uk/schema/parl#dateReceived> ?date .
 			#{filter}
 			} 
     	ORDER BY DESC(?date) 
@@ -60,7 +60,7 @@ where {
 		'''
 		{"@context": {
     		"depositingDepartment": "http://data.parliament.uk/schema/parl#department/",
-    		"depositedPaper": "http://data.parliament.uk/schema/parl#DepositedPaper"
+    		"item": "http://data.parliament.uk/schema/parl#DepositedPaper"
   			},
  		"http://data.parliament.uk/schema/parl#department": {"@embed": "@always"},
   		"http://purl.org/dc/terms/subject": {"@embed": "@always"},
@@ -74,9 +74,9 @@ where {
 		"
 		PREFIX parl: <http://data.parliament.uk/schema/parl#>
 		PREFIX dc-term:<http://purl.org/dc/terms/>
-		SELECT (COUNT(DISTINCT ?depositedPaper) AS ?total)
+		SELECT (COUNT(DISTINCT ?item) AS ?total)
 		WHERE {
-			?depositedPaper a parl:DepositedPaper ;
+			?item a parl:DepositedPaper ;
 			  parl:dateReceived ?date .
 			#{filter}
 		}

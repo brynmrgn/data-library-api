@@ -1,0 +1,22 @@
+<% content_for :title do %>
+  <div style="display: flex; align-items: center; gap: 0.5rem;">
+    <h2 style="margin: 0;"><%= @model_class.page_title %><%= @title %></h2>
+    <%= link_to @model_class.feed_path, class: "rss-link", title: "Subscribe to RSS feed" do %>
+      <%= image_tag "rss-icon.svg", alt: "RSS Feed", class: "rss-icon", style: "width: 20px; height: 20px;" %>
+    <% end %>
+  </div>
+<% end %>
+
+<% content_for :content do %>
+  <%== pagy_nav(@pagy) if @pagy %>
+  
+  <div id="index">
+    <% @items.each do |item| %>
+      <%= render partial: 'shared/card', locals: { item: item } %>
+    <% end %>
+  </div>
+  
+  <%== pagy_nav(@pagy) if @pagy %>
+<% end %>
+
+<%= render template: "layouts/application" %>
