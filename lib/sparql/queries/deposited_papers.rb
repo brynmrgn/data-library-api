@@ -1,7 +1,7 @@
 module Sparql::Queries::DepositedPapers
 
     # A Sparql query to get deposited papers - in date order
-	def list_query(filter, offset:, limit:)
+	def self.list_query(filter, offset:, limit:)
         "
 PREFIX skos:<http://www.w3.org/2004/02/skos/core#>
 PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
@@ -58,7 +58,7 @@ where {
 "
 	end
 
-	def item_frame
+	def self.item_frame
 		'''
 		{"@context": {
     		"item": "http://data.parliament.uk/schema/parl#DepositedPaper"

@@ -1,5 +1,5 @@
 # app/models/research_briefing.rb
-class ResearchBriefing
+class ResearchBriefing < LinkedDataResource
   include ApplicationHelper
 
   TERM_TYPE_MAPPINGS = {
@@ -17,6 +17,13 @@ class ResearchBriefing
     link_base: 'research-briefings'
   }.freeze
 
+  SPARQL_TYPE = '<http://data.parliament.uk/schema/parl#ResearchBriefing>'.freeze
+  QUERY_MODULE = Sparql::Queries::ResearchBriefings
+  # Construct the URI for a deposited paper given its ID - this is because of URI structure in triplestore
+  def self.construct_uri(id)
+    "http://data.parliament.uk/resources/#{id}"
+  end
+
     def card_data
     {
       primary_info: {text: primary_info_text},
@@ -25,13 +32,6 @@ class ResearchBriefing
       indicators_left: {text: indicators_left_text},
       indicators_right: {text: indicators_right_text}
     }
-  end
-
-  attr_reader :id, :data
-  
-  def initialize(id:, data:)
-    @id = id
-    @data = data
   end
 
   def to_model
@@ -67,7 +67,7 @@ class ResearchBriefing
     tertiary_info_text
   end
   
-  def date
+  def primary_date
     date_value = data['http://purl.org/dc/terms/date']
     return nil unless date_value.present?
   

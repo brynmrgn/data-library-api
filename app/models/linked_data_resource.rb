@@ -18,6 +18,10 @@ class LinkedDataResource
     data["title"] ||
     default_title
   end
+
+  def item_uri
+    data['@id']
+  end
   
   # Primary date - override in subclasses to define sorting date
   def date

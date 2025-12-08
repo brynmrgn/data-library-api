@@ -10,6 +10,14 @@ class DepositedPaper < LinkedDataResource
     # Add any other term types that deposited papers support
   }.freeze
 
+  SPARQL_TYPE = '<http://data.parliament.uk/schema/parl#DepositedPaper>'.freeze
+  QUERY_MODULE = Sparql::Queries::DepositedPapers
+  
+  # Construct the URI for a deposited paper given its ID - this is because of URI structure in triplestore
+  def self.construct_uri(id)
+    "http://data.parliament.uk/depositedpapers/#{id}"
+  end
+
   RSS_CONFIG = {
     title: 'UK Parliament Deposited Papers',
     description: 'Latest deposited papers from the UK Parliament',
@@ -24,10 +32,6 @@ class DepositedPaper < LinkedDataResource
       indicators_left: {text: indicators_left_text},
       indicators_right: {text: indicators_right_text}
     }
-  end
-  
-  def initialize(id:, data:)
-    super(id: id, data: data, resource_type: :deposited_paper)
   end
 
   def to_model
@@ -59,8 +63,8 @@ class DepositedPaper < LinkedDataResource
     data['http://purl.org/dc/terms/abstract']
   end 
 
-  def date
-  date_received || Time.now # Fallback to current time if no date
+  def primary_date
+    date_received || Time.now # Fallback to current time if no date
   end
 
   private
@@ -72,11 +76,11 @@ class DepositedPaper < LinkedDataResource
     identifier = data['http://purl.org/dc/terms/identifier'] || "No identifier available."
     identifier
   end
-  def tertiary_info_text
-    department = data['http://data.parliament.uk/schema/parl#department']
-    terms = terms_no_link(department)
-    "Deposited by: #{terms}" if terms
-  end
+def tertiary_info_text  
+  department = data['http://data.parliament.uk/schema/parl#department']
+  terms = terms_no_link(department)
+  "Deposited by: #{terms}" if terms
+end
   def indicators_left_text
     date = self.date_received
     date.strftime("Received on: %d %B %Y") if date
