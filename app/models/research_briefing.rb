@@ -60,11 +60,11 @@ class ResearchBriefing
     
   # Get display information for RSS feed
   def title
-    primary_info[:text]
+    primary_info_text
   end
   
   def abstract
-    secondary_info[:description]
+    tertiary_info_text
   end
   
   def date
