@@ -55,9 +55,11 @@
 <% end %>
 </li>
 
-<% if @item.data['http://data.parliament.uk/schema/parl#relatedLink'] %>
+<% if @item.related_links.any? %>
     <li>Related links: 
-        <%= @item.data['http://data.parliament.uk/schema/parl#relatedLink'].map { |link| link_to(link['http://www.w3.org/2000/01/rdf-schema#label'], link['http://schema.org/url']['@id'], target: '_blank', rel: 'noopener') }.join(', ').html_safe %>
+        <%= @item.related_links.map { |link| 
+          link_to(link[:label], link[:url], target: '_blank', rel: 'noopener') 
+        }.join(', ').html_safe %>
     </li>
 <% end %>
 

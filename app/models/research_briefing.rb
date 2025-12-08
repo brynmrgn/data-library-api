@@ -78,6 +78,21 @@ class ResearchBriefing < LinkedDataResource
     nil
   end
 
+  def related_links
+    links = data['http://data.parliament.uk/schema/parl#relatedLink']
+    return [] if links.nil?
+    
+    # Normalize to array
+    links = [links] unless links.is_a?(Array)
+    
+    links.map do |link|
+      {
+        label: link['http://www.w3.org/2000/01/rdf-schema#label'],
+        url: link['http://schema.org/url'].is_a?(Hash) ? link['http://schema.org/url']['@id'] : link['http://schema.org/url']
+      }
+    end.compact
+  end
+
   private
   def primary_info_text
     title = data['http://purl.org/dc/terms/title'] || "No title available."

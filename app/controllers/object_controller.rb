@@ -38,6 +38,11 @@ def index
   count = SparqlItemsCount.get_items_count(type_key, filter)
   @pagy = Pagy.new(count: count, limit: $DEFAULT_RESULTS_PER_PAGE, page: page)
 
+  # Build the query for display
+  query_module = @model_class::QUERY_MODULE
+  @query = query_module.list_query(filter, offset: @pagy.offset, limit: $DEFAULT_RESULTS_PER_PAGE)
+  @queries = [@query]
+
   @items = SparqlGetObject.get_items(type_key, filter, limit: $DEFAULT_RESULTS_PER_PAGE, offset: @pagy.offset)
   
   render partial: 'shared/index'
@@ -46,7 +51,6 @@ def index
     format.html
     format.json { render json: index_json }
   end
-
 end
 
 def show
