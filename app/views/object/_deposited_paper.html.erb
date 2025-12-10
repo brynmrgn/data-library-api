@@ -11,6 +11,7 @@
 <% else %>
 No description available.
 <% end %>
+</p>
 <h3>Available files</h3>
 <ul>
 <% if @item.data['parl:depositedFile'] %>
@@ -26,28 +27,28 @@ No description available.
     <li>No files available</li>
 <% end %>
 </ul>
-<!-- A comment -->
+
 <p>Deposited by:
 <% if @item.data['parl:department'] %>
-    <%= raw(terms_with_link(@item.data['parl:department'], 'depositing-department' , deposited_papers_path)) %> 
+    <%= @item.terms_with_link(@item.data['parl:department'], 'depositing-department') %> 
 <% end %>
 </p>
 
 <p>Corporate author: 
 <% if @item.data['parl:corporateAuthor'] %>
-    <%= raw(terms_with_link(@item.data['parl:corporateAuthor'], 'corporate-author', deposited_papers_path)) %>
+    <%= @item.terms_with_link(@item.data['parl:corporateAuthor'], 'corporate-author') %>
 <% end %>
 </p>
 
 <p>Subjects:  
 <% if @item.data['dc-term:subject'] %>
-    <%= raw(terms_with_link(@item.data['dc-term:subject'], 'subject', deposited_papers_path)) %>
+    <%= @item.terms_with_link(@item.data['dc-term:subject'], 'subject') %>
 <% end %>
 </p>
 
 <p>Houses:  
 <% if @item.data['parl:legislature'] %>
-    <%= raw(terms_with_link(@item.data['parl:legislature'], 'legislature', deposited_papers_path)) %>
+    <%= @item.terms_with_link(@item.data['parl:legislature'], 'legislature') %>
 <% end %>
 </p>
 

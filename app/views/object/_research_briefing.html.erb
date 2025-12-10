@@ -20,30 +20,30 @@
 <li>Identifier: <%= @item.data['dc-term:identifier'] %></li>
 <li>Type: 
 <% if @item.data['parl:subtype'] %>
-    <%= @item.terms_with_link(@item.data['parl:subtype'], 'subtype' , research_briefings_path) %>
+    <%= @item.terms_with_link(@item.data['parl:subtype'], 'subtype') %>
 <% end %>
 <% if @item.data['parl:category'] %>
-   | <%= @item.terms_with_link(@item.data['parl:category'], 'category' , research_briefings_path) %>
+   | <%= @item.terms_with_link(@item.data['parl:category'], 'category') %>
 <% end %>
 </li>
 <li>Topics: 
 <% if @item.data['parl:topic'] %>
-    <%= @item.terms_with_link(@item.data['parl:topic'], 'topic' , research_briefings_path) %>
+    <%= @item.terms_with_link(@item.data['parl:topic'], 'topic') %>
 <% end %>
 </li>
 
 <li>Subjects:  
 <% if @item.data['dc-term:subject'] %>
-    <%= @item.terms_with_link(@item.data['dc-term:subject'], 'subject' , research_briefings_path) %>
+    <%= @item.terms_with_link(@item.data['dc-term:subject'], 'subject') %>
 <% end %>
 </li>
 
 <li>Publisher:  
 <% if @item.data['dc-term:publisher'] %>
-    <%= @item.terms_with_link(@item.data['dc-term:publisher'], 'publisher' , research_briefings_path) %>
+    <%= @item.terms_with_link(@item.data['dc-term:publisher'], 'publisher') %>
 <% end %>
 <% if @item.data['parl:section'] %>
-  | <%= @item.terms_with_link(@item.data['parl:section'], 'section' , research_briefings_path) %>
+  | <%= @item.terms_with_link(@item.data['parl:section'], 'section') %>
 <% end %>
 </li>
 <li>
@@ -99,9 +99,6 @@
 <% else %>
 No summary available.
 <% end %>
-
-<!-- A comment -->
-
 
 <hr>
 <details>
