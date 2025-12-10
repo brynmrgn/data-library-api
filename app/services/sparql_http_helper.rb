@@ -44,17 +44,19 @@ module SparqlHttpHelper
 def self.apply_json_ld_frame(response, model_class)
   require 'json/ld'
   
-  response_data = JSON.parse(response.body)
-  puts "DEBUG apply_json_ld_frame: response_data class = #{response_data.class}"
-  puts "DEBUG apply_json_ld_frame: response_data = #{response_data.inspect}"
+  response_body = JSON.parse(response.body)
+  puts "apply_json_ld_frame: response_body class = #{response_body.class}"
+  puts "apply_json_ld_frame: response_body = #{response_body.inspect[0..500]}"
   
-  frame_json = model_class::QUERY_MODULE.item_frame
-  frame = JSON.parse(frame_json)
-  puts "DEBUG apply_json_ld_frame: frame = #{frame.inspect}"
+  sparql_type = model_class::SPARQL_TYPE.gsub(/[<>]/, '')
+  puts "apply_json_ld_frame: sparql_type = #{sparql_type}"
   
-  framed_data = JSON::LD::API.frame(response_data, frame)
-  puts "DEBUG apply_json_ld_frame: framed_data class = #{framed_data.class}"
-  puts "DEBUG apply_json_ld_frame: framed_data = #{framed_data.inspect}"
+  frame = Sparql::Queries::Base.frame(sparql_type)
+  puts "apply_json_ld_frame: frame = #{frame.inspect}"
+  
+  framed_data = JSON::LD::API.frame(response_body, frame)
+  puts "apply_json_ld_frame: framed_data class = #{framed_data.class}"
+  puts "apply_json_ld_frame: framed_data = #{framed_data.inspect[0..500]}"
   
   response.define_singleton_method(:body) { framed_data.to_json }
   response

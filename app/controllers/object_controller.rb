@@ -2,6 +2,7 @@
 class ObjectController < ApplicationController
   include Sparql::Get::Response
   include SparqlItemsCount
+  include TermsHelper
 
   
 def index
@@ -13,21 +14,31 @@ def index
   @title = ""
 
   if params['term_type']
-    term_label = helpers.get_term_label(params[:id])
-    mappings = @model_class::TERM_TYPE_MAPPINGS
-    mapping = mappings[params['term_type'].to_s]
-    
-    if mapping.nil?
-      Rails.logger.error "Invalid term_type '#{params['term_type']}' for #{@model_class}"
-      render plain: "Invalid filter type '#{params['term_type']}' for #{params[:controller_name]}", status: :not_found
-      return
-    end
-    
-    filter_type = mapping[:predicate]
-    @title = ": #{mapping[:label]}: #{term_label}"
-    filter = "?item #{filter_type} ?term . FILTER (?term IN (<http://data.parliament.uk/terms/#{params[:id]}>))"
-    @id = params[:id]
+  term_label = helpers.get_term_label(params[:id])
+  mappings = @model_class::TERM_TYPE_MAPPINGS
+  mapping = mappings[params['term_type'].to_s]
+  
+  if mapping.nil?
+    Rails.logger.error "Invalid term_type '#{params['term_type']}' for #{@model_class}"
+    render plain: "Invalid filter type '#{params['term_type']}' for #{params[:controller_name]}", status: :not_found
+    return
   end
+  
+  filter_type = mapping[:predicate]
+  @title = ": #{mapping[:label]}: #{term_label}"
+  
+  # Handle nested predicates (like authors)
+  if mapping[:nested]
+    filter = "?item #{filter_type} ?authorResource . 
+              ?authorResource #{mapping[:nested_predicate]} ?term . 
+              FILTER (?term IN (<http://data.parliament.uk/terms/#{params[:id]}>))"
+  else
+    filter = "?item #{filter_type} ?term . 
+              FILTER (?term IN (<http://data.parliament.uk/terms/#{params[:id]}>))"
+  end
+  
+  @id = params[:id]
+end
 
   items = params[:per_page].presence&.to_i || $DEFAULT_RESULTS_PER_PAGE
   items = $DEFAULT_RESULTS_PER_PAGE if items <= 0
@@ -39,8 +50,7 @@ def index
   @pagy = Pagy.new(count: count, limit: $DEFAULT_RESULTS_PER_PAGE, page: page)
 
   # Build the query for display
-  query_module = @model_class::QUERY_MODULE
-  @query = query_module.list_query(filter, offset: @pagy.offset, limit: $DEFAULT_RESULTS_PER_PAGE)
+  @query = @model_class.list_query(filter, offset: @pagy.offset, limit: $DEFAULT_RESULTS_PER_PAGE)  
   @queries = [@query]
 
   @items = SparqlGetObject.get_items(type_key, filter, limit: $DEFAULT_RESULTS_PER_PAGE, offset: @pagy.offset)
@@ -54,33 +64,20 @@ def index
 end
 
 def show
-  @type_key = params[:controller_name].underscore.to_sym
-  @model_class = get_model_class(@type_key)
-
-  puts "DEBUG type_key: #{@type_key}"
-  puts "DEBUG model_class: #{@model_class}"
-  puts "DEBUG params[:id]: #{params[:id]}"
-  puts "DEBUG constructed_uri: #{@model_class.construct_uri(params[:id])}"
+  controller_name = params[:controller_name]
+  type_key = controller_name.singularize.underscore.to_sym
+  id = params[:id]
   
-  @item = SparqlGetObject.get_item(@type_key, params[:id])
-
-  puts "DEBUG @item: #{@item.inspect}"
-  puts "DEBUG @item.class: #{@item.class}"
+  @item = SparqlGetObject.get_item(type_key, id)
   
-  render "object/#{params[:controller_name]}_show"
+  render :show
+
 end
 
 def feed
   model_name = params[:controller_name].classify
   @model_class = model_name.constantize
-  
-  # Get the module instances
-  items_module = "Sparql::Get::#{model_name.pluralize}".constantize
-  queries_module = "Sparql::Queries::#{model_name.pluralize}".constantize
-  
-  # Extend self with the modules
-  self.class.include(items_module)
-  self.class.include(queries_module)
+  type_key = model_name.underscore.to_sym
   
   filter = ""
   @title = ""
@@ -92,21 +89,23 @@ def feed
     mapping = mappings[params['term_type'].to_s]
     
     if mapping.nil?
-      render plain: "Invalid filter type", status: :not_found
+      Rails.logger.error "Invalid term_type '#{params['term_type']}' for #{@model_class}"
+      render plain: "Invalid filter type '#{params['term_type']}' for #{params[:controller_name]}", status: :not_found
       return
     end
     
     filter_type = mapping[:predicate]
     @title = " - #{mapping[:label]}: #{term_label}"
     
-    filter = "?item #{filter_type} ?term .
-    FILTER (?term IN (<http://data.parliament.uk/terms/#{params[:id]}>))"
+    filter = "?item #{filter_type} ?term . FILTER (?term IN (<http://data.parliament.uk/terms/#{params[:id]}>))"
   end
 
-  @items = get_items(filter, limit: 50, offset: 0)
+  # Use the same approach as index - no more module includes
+  @items = SparqlGetObject.get_items(type_key, filter, limit: 50, offset: 0)
   
   render template: 'shared/feed', layout: false
-end 
+end
+
 
 private
 
@@ -129,9 +128,9 @@ private
   def item_to_json(item)
     {
       id: item.to_param,
-      title: item.data['http://purl.org/dc/terms/title'],
-      identifier: item.data['http://purl.org/dc/terms/identifier'],
-      date: item.data['http://purl.org/dc/terms/date'] || item.data['http://data.parliament.uk/schema/parl#dateReceived'],
+      title: item.data['dc-term:title'],
+      identifier: item.data['dc-term:identifier'],
+      date: item.data['dc-term:date'] || item.data['parl:dateReceived'],
       url: item_path(item)
     }
   end 

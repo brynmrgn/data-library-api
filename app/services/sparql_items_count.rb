@@ -10,10 +10,10 @@ module SparqlItemsCount
   query = <<~SPARQL
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX dc-term: <http://purl.org/dc/terms/>
+    PREFIX parl: <http://data.parliament.uk/schema/parl#>
     SELECT (COUNT(DISTINCT ?item) AS ?total)
     WHERE {
-      ?item a #{item_type} ;
-      dc-term:date ?date .
+      ?item a #{item_type} .
       #{filter}
     }
   SPARQL

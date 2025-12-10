@@ -1,14 +1,21 @@
 # app/models/research_briefing.rb
 class ResearchBriefing < LinkedDataResource
-  include ApplicationHelper
+  include SparqlQueryable
+  include PresentationHelpers
 
   TERM_TYPE_MAPPINGS = {
     'subject' => { predicate: 'dc-term:subject', label: 'subject' },
-    'topic' => { predicate: '<http://data.parliament.uk/schema/parl#topic>', label: 'topic' },
+    'topic' => { predicate: 'parl:topic', label: 'topic' },
     'publisher' => { predicate: 'dc-term:publisher', label: 'published by' },
-    'section' => { predicate: '<http://data.parliament.uk/schema/parl#section>', label: 'Section' },
-    'subtype' => { predicate: '<http://data.parliament.uk/schema/parl#subtype>', label: 'Type' },
-    'category' => { predicate: '<http://data.parliament.uk/schema/parl#category>', label: 'Category' }
+    'section' => { predicate: 'parl:section', label: 'Section' },
+    'subtype' => { predicate: 'parl:subtype', label: 'Type' },
+    'category' => { predicate: 'parl:category', label: 'Category' },
+      'author' => {
+        label: 'Author',
+        predicate: 'dc-term:creator',
+        nested: true,  # Flag to indicate nested structure
+        nested_predicate: 'rdfs:seeAlso'  # The predicate to reach the term
+      },
   }.freeze
 
     RSS_CONFIG = {
@@ -17,8 +24,72 @@ class ResearchBriefing < LinkedDataResource
     link_base: 'research-briefings'
   }.freeze
 
+  QUERY_MODULE = Sparql::Queries::Base
   SPARQL_TYPE = '<http://data.parliament.uk/schema/parl#ResearchBriefing>'.freeze
-  QUERY_MODULE = Sparql::Queries::ResearchBriefings
+
+  SORT_BY = :date 
+  REQUIRED_ATTRIBUTES = [:title, :identifier].freeze
+  INDEX_ATTRIBUTES = [:title, :identifier, :description, :date, :publisher, :topic].freeze
+
+  ATTRIBUTES = {
+    # Simple properties
+    title: 'dc-term:title',
+    identifier: 'dc-term:identifier',
+    description: 'dc-term:description',
+    date: 'dc-term:date',
+    content_location: 'parl:contentLocation',
+    external_location: 'parl:externalLocation',
+    html_summary: 'parl:htmlsummary',
+    
+    # Nested objects (with their properties)
+    topic: {
+      uri: 'parl:topic',
+      properties: { label: 'skos:prefLabel' }
+    },
+    subject: {
+      uri: 'dc-term:subject',
+      properties: { label: 'skos:prefLabel' }
+    },
+    publisher: {
+      uri: 'dc-term:publisher',
+      properties: { label: 'skos:prefLabel' }
+    },
+    section: {
+      uri: 'parl:section',
+      properties: { label: 'skos:prefLabel' }
+    },
+    subtype: {
+      uri: 'parl:subtype',
+      properties: { label: 'skos:prefLabel' }
+    },
+    category: {
+      uri: 'parl:category',
+      properties: { label: 'skos:prefLabel' }
+    },
+    author: {
+      uri: 'dc-term:creator',
+      properties: { 
+        ses_id: 'rdfs:seeAlso',
+        given_name: 'schema:givenName',
+        family_name: 'schema:familyName'
+      }
+    },
+    related_link: {
+      uri: 'parl:relatedLink',
+      properties: {
+        url: 'schema:url',
+        label: 'rdfs:label'
+      }
+    },
+    attachment: {
+      uri: 'parl:attachment',
+      properties: {
+        title: 'dc-term:title',
+        file_url: 'nfo:fileUrl'
+      }
+    }
+  }.freeze
+
   # Construct the URI for a deposited paper given its ID - this is because of URI structure in triplestore
   def self.construct_uri(id)
     "http://data.parliament.uk/resources/#{id}"
@@ -68,18 +139,18 @@ class ResearchBriefing < LinkedDataResource
   end
   
   def primary_date
-    date_value = data['http://purl.org/dc/terms/date']
+    date_value = data['dc-term:date']
     return nil unless date_value.present?
   
     # Handle both string and hash formats
     date_string = date_value.is_a?(Hash) ? date_value["@value"] : date_value
-    Date.parse(date_string)
+    DateTime.parse(date_string)
     rescue ArgumentError, TypeError
     nil
   end
 
   def related_links
-    links = data['http://data.parliament.uk/schema/parl#relatedLink']
+    links = data['parl:relatedLink']
     return [] if links.nil?
     
     # Normalize to array
@@ -95,24 +166,26 @@ class ResearchBriefing < LinkedDataResource
 
   private
   def primary_info_text
-    title = data['http://purl.org/dc/terms/title'] || "No title available."
+    title = data['dc-term:title'] || "No title available."
     title
   end
   def secondary_info_text
-    publisher = data['http://purl.org/dc/terms/publisher']
+    publisher = data['dc-term:publisher']
     publisherLabel = terms_no_link(publisher) if publisher
-    identifier = data['http://purl.org/dc/terms/identifier'] || "No identifier available."
-    date = data['http://purl.org/dc/terms/date']
+    identifier = data['dc-term:identifier'] || "No identifier available."
+    date = data['dc-term:date']
     formatted_date = date ? DateTime.parse(date["@value"]).strftime("%d %B %Y") : ""
     formatted_date + " | " + identifier + " | " + publisherLabel.to_s
   end
   def tertiary_info_text
-    description = data['http://purl.org/dc/terms/description'] || "No description available."
+    description = data['dc-term:description'] || "No description available."
     description
   end
   def indicators_left_text
-    terms = data['http://data.parliament.uk/schema/parl#topic']
-    terms_no_link(terms) if terms
+    terms = data['parl:topic']
+    return "" unless terms.present?
+    result = terms_no_link(terms)
+    result  
   end
   def indicators_right_text
     #    Empty for research briefings

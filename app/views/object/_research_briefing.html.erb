@@ -1,0 +1,112 @@
+<% content_for :content do %>
+<h2><%= @item.data['dc-term:title'] %></h2>
+
+<p>
+<% if @item.data['dc-term:description'] %>
+    <%= @item.data['dc-term:description'] %>
+<% else %> 
+    No document available.
+<% end %>
+</p>
+
+<ul>
+  <li>Published date: 
+    <% if @item.data['dc-term:date'] %>
+      <%= DateTime.parse(@item.data['dc-term:date']["@value"]).strftime("%d %B %Y") %>
+    <% else %>
+      No date available.
+    <% end %>
+  </li>
+<li>Identifier: <%= @item.data['dc-term:identifier'] %></li>
+<li>Type: 
+<% if @item.data['parl:subtype'] %>
+    <%= @item.terms_with_link(@item.data['parl:subtype'], 'subtype' , research_briefings_path) %>
+<% end %>
+<% if @item.data['parl:category'] %>
+   | <%= @item.terms_with_link(@item.data['parl:category'], 'category' , research_briefings_path) %>
+<% end %>
+</li>
+<li>Topics: 
+<% if @item.data['parl:topic'] %>
+    <%= @item.terms_with_link(@item.data['parl:topic'], 'topic' , research_briefings_path) %>
+<% end %>
+</li>
+
+<li>Subjects:  
+<% if @item.data['dc-term:subject'] %>
+    <%= @item.terms_with_link(@item.data['dc-term:subject'], 'subject' , research_briefings_path) %>
+<% end %>
+</li>
+
+<li>Publisher:  
+<% if @item.data['dc-term:publisher'] %>
+    <%= @item.terms_with_link(@item.data['dc-term:publisher'], 'publisher' , research_briefings_path) %>
+<% end %>
+<% if @item.data['parl:section'] %>
+  | <%= @item.terms_with_link(@item.data['parl:section'], 'section' , research_briefings_path) %>
+<% end %>
+</li>
+<li>
+<% if @item.authors_with_link.present? %>
+  Author: <%= @item.authors_with_link %>
+<% end %>
+</li> 
+<li>
+  <% if @item.data['parl:externalLocation'] %>
+    <a href="<%= @item.data['parl:externalLocation']["@id"] %>">View on parliament.uk</a>
+  <% end %>
+  <% if @item.data['parl:contentLocation'] %>
+    | 
+    <a href="<%= @item.data['parl:contentLocation']["@id"] %>">Read document</a>
+  <% end %>
+</li>
+
+<% if @item.data['parl:relatedLink']&.any? %>
+    <li>Related links: 
+        <%= Array(@item.data['parl:relatedLink']).map { |link| 
+          link_to(link['rdfs:label'], link['schema:url']['@id'], target: '_blank', rel: 'noopener') 
+        }.join(', ').html_safe %>
+    </li>
+<% end %>
+
+<% if @item.data['parl:attachment'] %>
+  <% attachment = @item.data['parl:attachment'] %>
+  <% if attachment.is_a?(Hash) %>
+    <li>Attachments: 
+      <%= link_to(
+        attachment['dc-term:title'],
+        attachment.dig('http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileUrl', '@id'),
+        target: '_blank',
+        rel: 'noopener'
+      ) %>
+    </li>
+  <% elsif attachment.is_a?(Array) %>
+    <li>Attachments: 
+      <%= attachment.map { |att| 
+        link_to(att['dc-term:title'], 
+                att.dig('http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileUrl', '@id'),
+                target: '_blank',
+                rel: 'noopener')
+      }.join(', ').html_safe %>
+    </li>
+  <% end %>
+<% end %>
+
+</ul>
+
+<% if @item.data['parl:htmlsummary'] %>
+<%= "#{ CGI::unescapeHTML(@item.data['parl:htmlsummary']) }".html_safe %>
+<% else %>
+No summary available.
+<% end %>
+
+<!-- A comment -->
+
+
+<hr>
+<details>
+  <summary>Object details</summary>
+    <%= @item.data %>
+</details>
+<% end %>
+<%= render template: "layouts/application" %>

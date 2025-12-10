@@ -21,7 +21,7 @@ module BreadcrumbsHelper
     # Add final crumb for show pages or filtered index pages
     if action_name == "show" && @item
       crumbs << { label: section_label, url: section_path }  # Link it
-      identifier = @item.data['http://purl.org/dc/terms/identifier']
+      identifier = @item.data['dc-term:identifier']
       crumbs << { label: identifier, url: nil }  # No link (current page)
     elsif action_name == "index" && params[:term_type]
       crumbs << { label: section_label, url: section_path }  # Link it

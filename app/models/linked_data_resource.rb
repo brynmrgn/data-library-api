@@ -30,38 +30,38 @@ class LinkedDataResource
   
   # Get a specific date type
   def date_received
-    extract_date("http://data.parliament.uk/schema/parl#dateReceived", "date_received")
+    extract_date("parl:dateReceived", "date_received")
   end
   
   def date_published
-    extract_date("http://purl.org/dc/terms/issued", "date_published", "published_at")
+    extract_date("dc-term:issued", "date_published", "published_at")
   end
   
   def date_created
-    extract_date("http://purl.org/dc/terms/created", "date_created", "created_at")
+    extract_date("dc-term:created", "date_created", "created_at")
   end
   
   def date_modified
-    extract_date("http://purl.org/dc/terms/modified", "date_modified", "updated_at")
+    extract_date("dc-term:modified", "date_modified", "updated_at")
   end
   
   def link
-    data["http://data.parliament.uk/schema/parl#webLink"] ||
+    data["parl:webLink"] ||
     data["http://www.w3.org/2000/01/rdf-schema#seeAlso"] ||
     data["link"] ||
     data["url"]
   end
   
   def summary
-    data["http://purl.org/dc/terms/abstract"] ||
-    data["http://purl.org/dc/terms/description"] ||
+    data["dc-term:abstract"] ||
+    data["dc-term:description"] ||
     data["summary"] ||
     data["description"]
   end
   
   def author
-    data["http://purl.org/dc/terms/creator"] ||
-    data["http://data.parliament.uk/schema/parl#depositingBody"] ||
+    data["dc-term:creator"] ||
+    data["parl:depositingBody"] ||
     data["author"] ||
     data["creator"]
   end
@@ -98,11 +98,12 @@ class LinkedDataResource
     resource_type&.to_s&.titleize || "Resource"
   end
   
-  def parse_date(date_string)
-    return date_string if date_string.is_a?(Time) || date_string.is_a?(Date)
-    Time.parse(date_string.to_s)
-  rescue ArgumentError
-    nil
+  def parse_date(raw)
+    # Extract @value if it's a Hash
+    raw = raw['@value'] if raw.is_a?(Hash)
+    
+    # Parse the string to DateTime
+    DateTime.parse(raw) if raw.is_a?(String)
   end
 
 

@@ -22,6 +22,9 @@ class SparqlGetObject
       $SPARQL_REQUEST_HEADERS,
       model_class
     )
+
+      puts "Response status: #{response.code}"
+  puts "Response body: #{response.body[0..1000]}"
     
     unless response.is_a?(Net::HTTPSuccess)
       Rails.logger.error("SPARQL request failed: #{response.code} #{response.body}")
@@ -30,18 +33,23 @@ class SparqlGetObject
     
     results = JSON.parse(response.body)  # Parse the response body here
 
+  puts "Parsed results keys: #{results.keys}"
+  puts "Results @graph: #{results['@graph'].inspect[0..500]}"
+
     instantiate_items(results, type_key)
   end
 
-  def self.get_item(type_key, id)
+def self.get_item(type_key, id)
+  puts "get_item: type_key=#{type_key.inspect}, id=#{id}"
   model_class = get_model_class(type_key)
+  puts "get_item: model_class=#{model_class}"
   query_module = model_class::QUERY_MODULE
   
-  # Use model's construct_uri method
   item_uri = model_class.construct_uri(id)
   filter = "FILTER(?item = <#{item_uri}>)"
   
-  query = query_module.list_query(filter, offset: 0, limit: 1)
+  query = query_module.show_query(model_class, filter)
+  
   response = SparqlHttpHelper.execute_sparql_post(
     $SPARQL_REQUEST_URI,
     query,
@@ -49,13 +57,25 @@ class SparqlGetObject
     model_class
   )
   
+  puts "get_item: response.code=#{response.code}"
+  puts "get_item: response.body length=#{response.body.length}"
+  
   unless response.is_a?(Net::HTTPSuccess)
     Rails.logger.error("SPARQL item request failed: #{response.code} #{response.body}")
     return nil
   end
   
   results = JSON.parse(response.body)
-  instantiate_items(results, type_key).first
+  
+  # Wrap single item in @graph for consistency with get_items
+  results = { "@graph" => [results] } unless results['@graph']
+  
+  puts "get_item: results['@graph']=#{results['@graph'].inspect[0..500]}"
+  
+  items = instantiate_items(results, type_key)
+  puts "get_item: items=#{items.inspect}"
+  
+  items.first
 end
 
   private
@@ -63,34 +83,28 @@ end
 def self.instantiate_items(results, type_key)
   model_class = get_model_class(type_key)
   
-  # Handle framed JSON-LD structure
-  items_array = if results.is_a?(Hash) && results['@graph'].is_a?(Array)
-    results['@graph']
-  elsif results.is_a?(Hash) && results['@id']
-    # Single framed item (not wrapped in @graph)
-    [results]
-  elsif results.is_a?(Array)
-    results
-  else
-    []
-  end
+  items_array = results['@graph'] || []
+  puts "instantiate_items: Got #{items_array.length} items from @graph"
   
   items_array.map do |result|
     item_uri = result['@id']
     
     unless item_uri
-      Rails.logger.warn("Missing @id in result: #{result.inspect}")
+      puts "Missing @id in result: #{result.inspect}"
       next
     end
     
     id = item_uri.split('/').last
+    puts "instantiate_items: Creating #{model_class} with id=#{id}"
   
-    model_class.new(
+    item = model_class.new(
       id: id,
       data: result,
       resource_type: type_key
     )
-  end.compact
+    puts "instantiate_items: Created item with title=#{item.title}"
+    item
+  end.compact.tap { |items| puts "instantiate_items: Returning #{items.length} items" }
 end
 
   def self.get_model_class(type_key)

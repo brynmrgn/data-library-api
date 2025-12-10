@@ -163,6 +163,8 @@ GEM
     matrix (0.4.2)
     mini_mime (1.1.5)
     minitest (5.25.5)
+    mocha (2.8.2)
+      ruby2_keywords (>= 0.0.5)
     msgpack (1.8.0)
     multi_json (1.15.0)
     net-imap (0.5.8)
@@ -295,6 +297,7 @@ GEM
       rubocop-performance (>= 1.24)
       rubocop-rails (>= 2.30)
     ruby-progressbar (1.13.0)
+    ruby2_keywords (0.0.5)
     rubyzip (2.4.1)
     securerandom (0.4.1)
     selenium-webdriver (4.32.0)
@@ -373,6 +376,7 @@ DEPENDENCIES
   jbuilder
   json-ld
   kamal
+  mocha
   pagy
   pg (~> 1.1)
   propshaft
