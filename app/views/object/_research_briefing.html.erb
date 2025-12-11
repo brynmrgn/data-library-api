@@ -60,9 +60,10 @@
   <% end %>
 </li>
 
-<% if @item.data['parl:relatedLink']&.any? %>
+<% if @item.data['parl:relatedLink'] %>
+  <% links = @item.data['parl:relatedLink'].is_a?(Array) ? @item.data['parl:relatedLink'] : [@item.data['parl:relatedLink']] %>
     <li>Related links: 
-        <%= Array(@item.data['parl:relatedLink']).map { |link| 
+        <%= links.map { |link| 
           link_to(link['rdfs:label'], link['schema:url']['@id'], target: '_blank', rel: 'noopener') 
         }.join(', ').html_safe %>
     </li>
