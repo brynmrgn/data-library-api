@@ -24,6 +24,9 @@ class DepositedPaper < LinkedDataResource
     identifier: 'dc-term:identifier',
     abstract: 'dc-term:abstract',
     dateReceived: 'parl:dateReceived',
+    lastModified: 'parl:dateLastModified',
+    dateOfOrigin: 'parl:dateOfOrigin',
+    dateOfCommitmentToDeposit: 'parl:dateOfCommitmentToDeposit',
     corporateAuthor: {
       uri: 'parl:corporateAuthor',
       properties: {
@@ -48,6 +51,13 @@ class DepositedPaper < LinkedDataResource
       uri: 'parl:legislature',
       properties: {
         label: 'skos:prefLabel'
+      }
+      },
+    relation: {
+      uri: 'dc-term:relation',
+      properties: {
+        externalLocation: 'parl:externalLocation',
+        title: 'dc-term:title'
       }
     }
   }.freeze

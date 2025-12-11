@@ -1,4 +1,3 @@
-<% content_for :content do %>
 <h2><%= @item.data['dc-term:identifier'] %></h2>
 <% if @item.data['parl:indexStatus'] == "Requires Indexing" %>
 <div class="highlight highlight-info">
@@ -52,10 +51,22 @@ No description available.
 <% end %>
 </p>
 
-<hr>
-<details>
-  <summary>Object details</summary>
-    <%= @item.data %>
-</details>
+<% if @item.data['dc-term:relation'] %>
+<p>Related to:</p>
+<ul>
+    <% relations = @item.data['dc-term:relation'] %>    
+    <% if relations.class.name == "Hash" %>
+        <% relations = [] %>
+        <% relations << @item.data['dc-term:relation'] %>
+    <% end %>
+    <% relations.each do |relation| %>
+        <li>
+            <% if relation['parl:externalLocation'] && relation['parl:externalLocation']['@value'] %>
+                <a href="<%= relation['parl:externalLocation']['@value'] %>"><%= relation['dc-term:title'] || relation['parl:externalLocation']['@value'] %></a>
+            <% else %>
+                <%= relation['dc-term:title'] %>
+            <% end %>
+        </li>   
+    <% end %>
+</ul>
 <% end %>
-<%= render template: "layouts/application" %>

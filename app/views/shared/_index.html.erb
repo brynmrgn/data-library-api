@@ -15,9 +15,15 @@
           <%== pagy_nav(@pagy) %>
         </div>
         
-        <%= link_to @model_class.feed_path, class: "rss-link", title: "Subscribe to RSS feed" do %>
-        <%= image_tag "rss-icon.svg", alt: "RSS Feed", class: "rss-icon", style: "width: 16px; height: px;" %>
-        <% end %>
+        <div class="feed-links">
+          <%= link_to @model_class.feed_path, class: "rss-link", title: "Subscribe to RSS feed" do %>
+            <%= image_tag "rss-icon.svg", alt: "RSS Feed", class: "rss-icon", style: "width: 16px; height: 16px;" %>
+          <% end %>
+          
+          <%= link_to request.path + ".json", class: "json-link", title: "JSON API" do %>
+            &lt;/&gt;
+          <% end %>
+        </div>
       </div>
     <% end %>
     

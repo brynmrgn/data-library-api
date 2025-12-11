@@ -1,4 +1,3 @@
-# lib/sparql/queries/base.rb
 module Sparql::Queries::Base
   PREFIXES_HASH = {
     "parl" => "http://data.parliament.uk/schema/parl#",
@@ -7,29 +6,54 @@ module Sparql::Queries::Base
     "rdfs" => "http://www.w3.org/2000/01/rdf-schema#",
     "xsd" => "http://www.w3.org/2001/XMLSchema#",
     "schema" => "http://schema.org/",
-    "nfo" => "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#"
+    "nfo" => "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#",
+    "foaf" => "http://xmlns.com/foaf/0.1/"
   }.freeze
 
   PREFIXES = PREFIXES_HASH.map { |prefix, uri| "PREFIX #{prefix}: <#{uri}>" }.join("\n")
 
-  def self.frame(item_type = nil)
-    puts "Sparql::Queries::Base.frame called with: #{item_type}"
-    context = PREFIXES_HASH.dup
-    context["item"] = item_type if item_type
+  def self.frame(model_class = nil, context_type = 'show')
+    puts "Sparql::Queries::Base.frame called with: #{model_class&.name}, context: #{context_type}"
     
-    {
-      "@context" => context,
-      "parl:department" => { "@embed" => "@always" },
-      "dc-term:subject" => { "@embed" => "@always" },
-      "parl:corporateAuthor" => { "@embed" => "@always" },
-      "parl:depositedFile" => { "@embed" => "@always" },
-      "parl:legislature" => { "@embed" => "@always" },
-      "parl:relatedLink" => { "@embed" => "@always" },
-      "parl:attachment" => { "@embed" => "@always" },
-      "part:topic" => { "@embed" => "@always" },
-      "dc-term:publisher" => { "@embed" => "@always" }
-    }
+    frame_context = PREFIXES_HASH.dup
+    
+    frame = {
+      "@context" => frame_context,
+      "@type" => model_class ? model_class::SPARQL_TYPE.gsub(/[<>]/, '') : nil,
+      "@embed" => "@always"
+    }.compact
+    
+    # If a model class is provided, dynamically add only its attributes
+    if model_class
+      # Use INDEX_ATTRIBUTES for list views, ATTRIBUTES for show views
+      attributes = context_type == 'index' ? model_class::INDEX_ATTRIBUTES : model_class::ATTRIBUTES.keys
+      
+      puts "Using attributes for #{context_type}: #{attributes.inspect}"
+      
+      # Convert attribute symbols to their predicates
+      attributes.each do |attr|
+        attribute_config = model_class::ATTRIBUTES[attr]
+        
+        # Handle both simple strings and nested hashes
+        predicate = if attribute_config.is_a?(Hash)
+          attribute_config[:uri]
+        else
+          attribute_config
+        end
+        
+        if predicate
+          frame[predicate] = { "@embed" => "@always" }
+        else
+          puts "WARNING: No predicate found for attribute #{attr}"
+        end
+      end
+      
+      puts "Final frame predicates: #{frame.keys.reject { |k| k.start_with?('@') }.inspect}"
+    end
+    
+    frame
   end
+
   
 def self.list_query(model_class, filter, offset:, limit:)
   construct_clause = build_construct_clause(model_class, :index)
@@ -38,6 +62,7 @@ def self.list_query(model_class, filter, offset:, limit:)
   sort_attr_uri = model_class::ATTRIBUTES[sort_attr]
   
   required_where = build_required_where(model_class, :index)
+  required_where_optional = build_required_where_optional(model_class, :index)  # NEW
   
   query = "#{PREFIXES}
     CONSTRUCT {
@@ -45,13 +70,14 @@ def self.list_query(model_class, filter, offset:, limit:)
       #{construct_clause}
     }
     WHERE {
-      ?item #{required_where}
+      #{required_where_optional}       # Make them OPTIONAL in outer WHERE
       #{where_clause}
       
       {
         SELECT ?item ?sortValue
         WHERE {
           ?item a #{model_class::SPARQL_TYPE} ;
+            #{required_where.gsub(/\.$/, '')} ;
             #{sort_attr_uri} ?sortValue .
           #{filter}
         }
@@ -181,4 +207,18 @@ def self.build_where_clause(model_class, context = :show)
   
   where_lines.join("\n")
 end
+
+def self.build_required_where_optional(model_class, context = :show)
+  attributes = model_class::ATTRIBUTES
+  required = model_class::REQUIRED_ATTRIBUTES || []
+  
+  required.map do |attr_name|
+    uri = attributes[attr_name]
+    if uri.is_a?(Hash)
+      uri = uri[:uri]
+    end
+    "OPTIONAL { ?item #{uri} ?#{attr_name} . }"
+  end.join("\n      ")
+end
+
 end

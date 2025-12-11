@@ -9,7 +9,7 @@ class ApplicationController < ActionController::Base
 
   $DATE_DISPLAY_FORMAT = '%-d %B %Y'
   $CSV_DATE_DISPLAY_FORMAT = '%-d/%m/%Y'
-  $DEFAULT_RESULTS_PER_PAGE = 10
+  $DEFAULT_RESULTS_PER_PAGE = 20
   $MAX_RESULTS_PER_PAGE = 250
   allow_browser versions: :modern
 

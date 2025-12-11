@@ -1,6 +1,6 @@
 # app/controllers/object_controller.rb
 class ObjectController < ApplicationController
-  include Sparql::Get::Response
+  include SparqlHttpHelper
   include SparqlItemsCount
   include TermsHelper
 
@@ -47,19 +47,18 @@ end
   page  = 1 if page < 1
 
   count = SparqlItemsCount.get_items_count(type_key, filter)
-  @pagy = Pagy.new(count: count, limit: $DEFAULT_RESULTS_PER_PAGE, page: page)
+  @pagy = Pagy.new(count: count, limit: items, page: page)
 
   # Build the query for display
   @query = @model_class.list_query(filter, offset: @pagy.offset, limit: $DEFAULT_RESULTS_PER_PAGE)  
   @queries = [@query]
 
-  @items = SparqlGetObject.get_items(type_key, filter, limit: $DEFAULT_RESULTS_PER_PAGE, offset: @pagy.offset)
-  
-  render partial: 'shared/index'
+  @items = SparqlGetObject.get_items(type_key, filter, limit: items, offset: @pagy.offset)  
+  #render partial: 'shared/index'
 
   respond_to do |format|
-    format.html
-    format.json { render json: index_json }
+    format.html { render partial: 'shared/index' }
+    format.json { render json: index_json , pretty: true}
   end
 end
 
@@ -70,8 +69,10 @@ def show
   
   @item = SparqlGetObject.get_item(type_key, id)
   
-  render :show
-
+  respond_to do |format|
+    format.html { render :show }
+    format.json { render json: json_show_response(@item) }
+  end
 end
 
 def feed
@@ -115,24 +116,55 @@ private
     model_class
   end
 
-  def index_json
-    {
-      model: @model_class.name,
-      total_count: @pagy.count,
+def index_json
+  {
+    meta: {
+      total: @pagy.count,
       page: @pagy.page,
       per_page: @pagy.limit,
-      items: @items.map { |item| item_to_json(item) }
-    }
-  end
+      total_pages: @pagy.pages,
+      items_in_response: @items.size,
+      type: @model_class.name.underscore
+    },
+    links: {
+      self: request.original_url,
+      first: url_for(params.to_unsafe_h.merge(page: 1, only_path: false)),
+      last: url_for(params.to_unsafe_h.merge(page: @pagy.pages, only_path: false)),
+      next: @pagy.next ? url_for(params.to_unsafe_h.merge(page: @pagy.next, only_path: false)) : nil,
+      prev: @pagy.prev ? url_for(params.to_unsafe_h.merge(page: @pagy.prev, only_path: false)) : nil
+    }.compact,
+    items: @items.map { |item| format_item_for_json(item) }
+  }
+end
 
-  def item_to_json(item)
-    {
-      id: item.to_param,
-      title: item.data['dc-term:title'],
-      identifier: item.data['dc-term:identifier'],
-      date: item.data['dc-term:date'] || item.data['parl:dateReceived'],
-      url: item_path(item)
+def format_item_for_json(item)
+  {
+    id: item.id,
+    type: item.class.name.underscore,
+    title: item.data['dc-term:title'] || item.data['dc-term:identifier'],
+    identifier: item.data['dc-term:identifier'],
+    date: item.data['dc-term:date'],
+    url: "#{request.base_url}/#{params[:controller_name]}/#{item.id}",
+    data: item.data
+  }
+end
+
+def json_show_response(item)
+  response = {
+    data: item.data,
+    metadata: {
+      id: item.id,
+      type: item.resource_type,
+      uri: item.data['@id']
     }
-  end 
+  }
+  
+  # Pretty print in development
+  if Rails.env.development?
+    JSON.pretty_generate(response)
+  else
+    response
+  end
+end
 
 end

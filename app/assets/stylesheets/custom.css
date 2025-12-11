@@ -47,3 +47,16 @@
   margin: 0 0.01rem !important;
   padding: 0.25rem 0.5rem !important;
 }
+
+.feed-links {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.rss-link, .json-link {
+  text-decoration: none;
+  color: inherit;
+  font-family: monospace;
+  font-size: 16px;
+}
