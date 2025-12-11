@@ -24,7 +24,6 @@ class ResearchBriefing < LinkedDataResource
     link_base: 'research-briefings'
   }.freeze
 
-  QUERY_MODULE = Sparql::Queries::Base
   SPARQL_TYPE = '<http://data.parliament.uk/schema/parl#ResearchBriefing>'.freeze
 
   SORT_BY = :date 

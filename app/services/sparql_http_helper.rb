@@ -57,7 +57,7 @@ module SparqlHttpHelper
     puts "apply_json_ld_frame: sparql_type = #{sparql_type}"
     puts "apply_json_ld_frame: context_type = #{context_type}"
     
-    frame = Sparql::Queries::Base.frame(model_class, context_type)
+    frame = SparqlQueryBuilder.frame(model_class, context_type)
     puts "apply_json_ld_frame: frame = #{frame.inspect}"
     
     framed_data = JSON::LD::API.frame(response_body, frame)

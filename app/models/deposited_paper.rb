@@ -12,7 +12,6 @@ class DepositedPaper < LinkedDataResource
     # Add any other term types that deposited papers support
   }.freeze
   
-  QUERY_MODULE = Sparql::Queries::Base
   SPARQL_TYPE = '<http://data.parliament.uk/schema/parl#DepositedPaper>'.freeze
  
   REQUIRED_ATTRIBUTES = [:abstract, :identifier, :dateReceived].freeze
