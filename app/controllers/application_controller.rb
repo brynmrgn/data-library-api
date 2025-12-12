@@ -3,7 +3,10 @@ require 'open-uri'
 class ApplicationController < ActionController::Base
   include Pagy::Backend
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
-  $SPARQL_REQUEST_URI = URI( 'https://data-odp.parliament.uk/sparql' )
+  $SPARQL_REQUEST_URI = URI(
+    ENV.fetch('SPARQL_ENDPOINT', 'https://apimgmt-odp-prod-api-uksouth.azure-api.net/sparql')
+  )
+
   $SPARQL_REQUEST_HEADERS = { 'Content-Type': 'application/sparql-query', 'Accept': 'application/ld+json' }
   $SPARQL_COUNT_HEADERS = { 'Content-Type': 'application/sparql-query', 'Accept': 'application/sparql-results+json' }
 
