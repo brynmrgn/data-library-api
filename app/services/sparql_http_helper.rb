@@ -7,17 +7,12 @@ require 'json/ld'
 module SparqlHttpHelper
   extend ActiveSupport::Concern
 
-  included do
-    def self.sparql_post(uri, body, headers, model_class = nil)
-      SparqlHttpHelper.execute_sparql_post(uri, body, headers, model_class)
-    end
+  # Instance method that delegates to class method
+  def sparql_post(uri, body, headers, model_class = nil, attributes = nil)
+    SparqlHttpHelper.execute_sparql_post(uri, body, headers, model_class, attributes)
   end
 
-  def sparql_post(uri, body, headers, model_class = nil)
-    SparqlHttpHelper.execute_sparql_post(uri, body, headers, model_class)
-  end
-
-  def self.execute_sparql_post(uri, query, headers, model_class, context_type = 'show')
+  def self.execute_sparql_post(uri, query, headers, model_class = nil, attributes = nil)
     uri = URI(uri)
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
@@ -40,30 +35,28 @@ module SparqlHttpHelper
     # Check for both symbol and string keys
     accept_header = headers['Accept'] || headers[:Accept]
     if accept_header == 'application/ld+json' && model_class
-      apply_json_ld_frame(response, model_class, context_type)  # Pass context_type here
+      apply_json_ld_frame(response, model_class, attributes)
     else
       response
     end
   end
 
-  def self.apply_json_ld_frame(response, model_class, context_type)
+  def self.apply_json_ld_frame(response, model_class, attributes)
     require 'json/ld'
     
-    response_body = JSON.parse(response.body)
-    puts "apply_json_ld_frame: response_body class = #{response_body.class}"
-    puts "apply_json_ld_frame: response_body = #{response_body.inspect[0..500]}"
-    
+    response_body_text = response.body
+    puts "Response body: #{response_body_text[0..500]}"  # First 500 chars
+
+    if response_body_text.include?('Query interrupted')
+      raise "SPARQL query timed out or failed: #{response_body_text}"
+    end
+
+response_body = JSON.parse(response_body_text)
     sparql_type = model_class::SPARQL_TYPE.gsub(/[<>]/, '')
-    puts "apply_json_ld_frame: sparql_type = #{sparql_type}"
-    puts "apply_json_ld_frame: context_type = #{context_type}"
     
-    frame = SparqlQueryBuilder.frame(model_class, context_type)
-    puts "apply_json_ld_frame: frame = #{frame.inspect}"
+    frame = SparqlQueryBuilder.frame(model_class, attributes)
     
     framed_data = JSON::LD::API.frame(response_body, frame)
-    puts "apply_json_ld_frame: framed_data class = #{framed_data.class}"
-    puts "apply_json_ld_frame: framed_data @graph count = #{framed_data['@graph']&.length || 0}"
-    puts "apply_json_ld_frame: first item keys = #{framed_data['@graph']&.first&.keys&.inspect}"
     
     response.define_singleton_method(:body) { framed_data.to_json }
     response

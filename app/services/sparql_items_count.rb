@@ -23,7 +23,8 @@ module SparqlItemsCount
     $SPARQL_REQUEST_URI,
     query,
     $SPARQL_COUNT_HEADERS,
-    model_class
+    model_class,
+    attributes: nil
   )
   
   unless response.is_a?(Net::HTTPSuccess)

@@ -18,9 +18,7 @@ class SparqlQueryBuilder
 
   PREFIXES = PREFIXES_HASH.map { |prefix, uri| "PREFIX #{prefix}: <#{uri}>" }.join("\n")
 
-  def self.frame(model_class = nil, context_type = 'show')
-    puts "SparqlQueryBuilder.frame called with: #{model_class&.name}, context: #{context_type}"
-    
+  def self.frame(model_class = nil, attributes = nil)
     frame_context = PREFIXES_HASH.dup
     
     frame = {
@@ -30,12 +28,7 @@ class SparqlQueryBuilder
     }.compact
     
     # If a model class is provided, dynamically add only its attributes
-    if model_class
-      # Use INDEX_ATTRIBUTES for list views, ATTRIBUTES for show views
-      attributes = context_type == 'index' ? model_class::INDEX_ATTRIBUTES : model_class::ATTRIBUTES.keys
-      
-      puts "Using attributes for #{context_type}: #{attributes.inspect}"
-      
+    if model_class && attributes
       # Convert attribute symbols to their predicates
       attributes.each do |attr|
         attribute_config = model_class::ATTRIBUTES[attr]
@@ -53,21 +46,19 @@ class SparqlQueryBuilder
           puts "WARNING: No predicate found for attribute #{attr}"
         end
       end
-      
-      puts "Final frame predicates: #{frame.keys.reject { |k| k.start_with?('@') }.inspect}"
     end
     
     frame
   end
 
-  def self.list_query(model_class, filter, offset:, limit:)
-    construct_clause = build_construct_clause(model_class, :index)
-    where_clause = build_where_clause(model_class, :index)
+  def self.list_query(model_class, filter, offset:, limit:, attributes:)
+    construct_clause = build_construct_clause(model_class, attributes)
+    where_clause = build_where_clause(model_class, attributes)
     sort_attr = model_class::SORT_BY || :dateReceived
     sort_attr_uri = model_class::ATTRIBUTES[sort_attr]
     
-    required_where = build_required_where(model_class, :index)
-    required_where_optional = build_required_where_optional(model_class, :index)
+    required_where = build_required_where(model_class)
+    required_where_optional = build_required_where_optional(model_class)
     
     query = "#{PREFIXES}
     CONSTRUCT {
@@ -95,40 +86,33 @@ class SparqlQueryBuilder
     query
   end
 
-  def self.show_query(model_class, filter)
-    construct_clause = build_construct_clause(model_class, :show)
-    where_clause = build_where_clause(model_class, :show)
-    required_where = build_required_where(model_class, :show)
-    
-    query = "#{PREFIXES}
+  def self.show_query(model_class, filter, attributes: nil)
+    # Structure show queries similarly to list queries:
+    # same CONSTRUCT/WHERE shape, but without pagination/sorting
+    attributes ||= model_class::ATTRIBUTES.keys
+
+    construct_clause         = build_construct_clause(model_class, attributes)
+    where_clause             = build_where_clause(model_class, attributes)
+    required_where_optional  = build_required_where_optional(model_class)
+
+    "#{PREFIXES}
     CONSTRUCT {
       ?item a #{model_class::SPARQL_TYPE} ;
       #{construct_clause}
     }
     WHERE {
-      ?item #{required_where}
+      ?item a #{model_class::SPARQL_TYPE} .
+      #{required_where_optional}
       #{where_clause}
       #{filter}
     }"
-    
-    query
   end
   
   private
   
-  def self.get_attributes(model_class, context = :show)
-    case context
-    when :index
-      index_keys = model_class::INDEX_ATTRIBUTES || model_class::ATTRIBUTES.keys
-      model_class::ATTRIBUTES.slice(*index_keys)
-    when :show
-      model_class::ATTRIBUTES
-    else
-      model_class::ATTRIBUTES
-    end
-  end
+  # Removed get_attributes method - no longer needed!
   
-  def self.build_required_where(model_class, context = :show)
+  def self.build_required_where(model_class)
     attributes = model_class::ATTRIBUTES
     required = model_class::REQUIRED_ATTRIBUTES || []
     lines = required.map do |attr_name|
@@ -141,59 +125,56 @@ class SparqlQueryBuilder
     lines.join(" ;\n        ") + " ."
   end
   
-  def self.build_construct_clause(model_class, context = :show)
-    attributes = model_class::ATTRIBUTES
-    index_attrs = context == :index ? model_class::INDEX_ATTRIBUTES : nil
+def self.build_construct_clause(model_class, attributes_to_include)
+  all_attributes = model_class::ATTRIBUTES
+  
+  main_triples = []
+  nested_blocks = []
+  
+  attributes_to_include.each do |attr_name|
+    attr_config = all_attributes[attr_name]
+    next unless attr_config
     
-    main_triples = []
-    nested_triples = []
-    
-    attributes.each do |attr_name, attr_config|
-      next if index_attrs && !index_attrs.include?(attr_name)
+    if attr_config.is_a?(Hash)
+      uri = attr_config[:uri]
+      main_triples << "#{uri} ?#{attr_name}"
       
-      puts "Processing: #{attr_name}, config: #{attr_config.inspect}"
+      # Build nested block with type declaration
+      nested_lines = ["?#{attr_name} a #{uri} ;"]
       
-      if attr_config.is_a?(Hash)
-        uri = attr_config[:uri]
-        main_triples << "#{uri} ?#{attr_name}"
-        puts "  -> Nested object, adding main triple: #{uri} ?#{attr_name}"
-        
-        attr_config[:properties].each do |prop_name, prop_uri|
-          nested_triples << "?#{attr_name} #{prop_uri} ?#{attr_name}_#{prop_name}"
-          puts "  -> Adding nested triple: ?#{attr_name} #{prop_uri} ?#{attr_name}_#{prop_name}"
-        end
-      else
-        main_triples << "#{attr_config} ?#{attr_name}"
-        puts "  -> Simple property: #{attr_config} ?#{attr_name}"
+      props = attr_config[:properties].map do |prop_name, prop_uri|
+        "  #{prop_uri} ?#{attr_name}_#{prop_name}"
       end
+      
+      nested_lines << props.join(" ;\n")
+      nested_lines << " ."
+      nested_blocks << nested_lines.join("\n")
+    else
+      main_triples << "#{attr_config} ?#{attr_name}"
     end
-    
-    puts "Main triples: #{main_triples.inspect}"
-    puts "Nested triples: #{nested_triples.inspect}"
-    
-    construct = main_triples.map { |t| "    #{t}" }.join(" ;\n")
-    construct += " ."
-    
-    if nested_triples.any?
-      construct += "\n  " + nested_triples.map { |t| "#{t} ." }.join("\n  ")
-    end
-    
-    puts "Final construct:\n#{construct}\n\n"
-    construct
   end
   
-  def self.build_where_clause(model_class, context = :show)
-    attributes = get_attributes(model_class, context)
+  construct = main_triples.map { |t| "    #{t}" }.join(" ;\n")
+  construct += " ."
+  
+  if nested_blocks.any?
+    construct += "\n  " + nested_blocks.join("\n  ")
+  end
+  
+  construct
+end
+  
+  def self.build_where_clause(model_class, attributes_to_include)
+    all_attributes = model_class::ATTRIBUTES
     required = model_class::REQUIRED_ATTRIBUTES || []
     where_lines = []
-
-    # Convert all keys to symbols for consistent access
-    attributes = attributes.transform_keys(&:to_sym)
-    required = required.map(&:to_sym)
     
-    # Add optional attributes in OPTIONAL blocks ONLY
-    attributes.each do |attr_name, attr_config|
-      next if required.include?(attr_name)
+    # Only process the attributes we were asked to include
+    attributes_to_include.each do |attr_name|
+      next if required.include?(attr_name)  # Skip required attributes
+      
+      attr_config = all_attributes[attr_name]
+      next unless attr_config  # Skip if attribute doesn't exist
       
       if attr_config.is_a?(Hash)
         uri = attr_config[:uri]
@@ -213,7 +194,7 @@ class SparqlQueryBuilder
     where_lines.join("\n")
   end
 
-  def self.build_required_where_optional(model_class, context = :show)
+  def self.build_required_where_optional(model_class)
     attributes = model_class::ATTRIBUTES
     required = model_class::REQUIRED_ATTRIBUTES || []
     

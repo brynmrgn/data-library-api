@@ -61,99 +61,12 @@ class DepositedPaper < LinkedDataResource
     }
   }.freeze
   
-  # Construct the URI for a deposited paper given its ID - this is because of URI structure in triplestore
+    # Class method to build URI from ID
   def self.construct_uri(id)
     "http://data.parliament.uk/depositedpapers/#{id}"
   end
-
-  RSS_CONFIG = {
-    title: 'UK Parliament Deposited Papers',
-    description: 'Latest deposited papers from the UK Parliament',
-    link_base: 'deposited-papers'
-  }.freeze
-
-  def card_data
-    {
-      primary_info: {text: primary_info_text},
-      secondary_info: {text: secondary_info_text},
-      tertiary_info: {text: tertiary_info_text},
-      indicators_left: {text: indicators_left_text},
-      indicators_right: {text: indicators_right_text}
-    }
-  end
-
-  def to_model
-    self
-  end
-
-  def to_param
-    id
-  end
-
-  def persisted?
-    true
-  end
-
-  def model_name
-    ActiveModel::Name.new(self.class)
-  end
-
-  def self.page_title
-    "Deposited Papers"
-  end
   
-  def self.feed_path
-    Rails.application.routes.url_helpers.feed_deposited_papers_path
-  end
-
-  # Get display information for RSS feed
-  def abstract
-    data['dc-term:abstract']
-  end 
-
-  def title
-    data['dc-term:identifier']
-  end
-
-  def primary_date
-    date_received || Time.now # Fallback to current time if no date
-  end
-
-  private
-
-  def primary_info_text
-    title = data['dc-term:abstract'] || "No title available."
-    title 
-  end
-  def secondary_info_text
-    identifier = data['dc-term:identifier'] || "No identifier available."
-    identifier
-  end
-  def tertiary_info_text  
-    department = data['parl:department']
-    terms = terms_no_link(department)
-    "Deposited by: #{terms}" if terms
-  end
-
-def indicators_left_text
-  date = extract_date('parl:dateReceived')
-  return "" unless date
-  
-  date.strftime("Received on: %d %B %Y")
-end
-  
-  def indicators_right_text
-    legislature = data['parl:legislature']
-    terms = terms_no_link(legislature)
-    "House: #{terms}" if terms  
-  end
-  protected
-  
-  # Deposited papers sort by date received
-  def primary_date
-    date_received
-  end
-
-
+  # Generate accessor methods from ATTRIBUTES
+  finalize_attributes!
 end
 
