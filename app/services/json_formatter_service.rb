@@ -45,13 +45,14 @@ end
   
   # Formats multiple items for index view
   # @param items [Array<LinkedDataResource>] Items to format
-  # @param fields [String, nil] Optional fields parameter ('all' for all attributes)
+  # @param all_fields [Boolean] Whether to include all fields or just index attributes
   #
-def self.format_items_for_index(items, attributes:)
-  items.map do |item|
-    format_item(item, attributes_to_include: attributes, include_base_fields: true)
+  def self.format_items_for_index(items, all_fields: false)
+    items.map do |item|
+      attributes = all_fields ? item.class::ATTRIBUTES.keys : item.class::INDEX_ATTRIBUTES
+      format_item(item, attributes_to_include: attributes, include_base_fields: true)
+    end
   end
-end
   
   # Formats a single item for show (detail) view
   # Returns hash with meta and data sections

@@ -1,0 +1,168 @@
+# config/models.yml
+# Single source of truth for all Data Library API models
+# Run: rake generate:models to regenerate all model files
+
+research_briefings:
+  route_path: research-briefings
+  sparql_type: "http://data.parliament.uk/schema/parl#ResearchBriefing"
+  base_uri: "http://data.parliament.uk/resources/{id}"
+  sort_by: date
+
+  attributes:
+    # Simple properties
+    title: dc-term:title
+    identifier: dc-term:identifier
+    description: dc-term:description
+    date: dc-term:date
+    content_location: parl:contentLocation
+    external_location: parl:externalLocation
+    html_summary: parl:htmlsummary
+
+    # Nested objects
+    topic:
+      uri: parl:topic
+      properties:
+        label: skos:prefLabel
+    subject:
+      uri: dc-term:subject
+      properties:
+        label: skos:prefLabel
+    publisher:
+      uri: dc-term:publisher
+      properties:
+        label: skos:prefLabel
+    section:
+      uri: parl:section
+      properties:
+        label: skos:prefLabel
+    subtype:
+      uri: parl:subtype
+      properties:
+        label: skos:prefLabel
+    category:
+      uri: parl:category
+      properties:
+        label: skos:prefLabel
+    author:
+      uri: dc-term:creator
+      properties:
+        ses_id: rdfs:seeAlso
+        given_name: schema:givenName
+        family_name: schema:familyName
+    related_link:
+      uri: parl:relatedLink
+      properties:
+        url: schema:url
+        label: rdfs:label
+    attachment:
+      uri: parl:attachment
+      properties:
+        title: dc-term:title
+        file_url: nfo:fileUrl
+
+  index_attributes:
+    - title
+    - identifier
+    - description
+    - date
+    - publisher
+    - topic
+
+  required_attributes:
+    - title
+    - identifier
+
+  term_type_mappings:
+    subject:
+      predicate: dc-term:subject
+      label: subject
+    topic:
+      predicate: parl:topic
+      label: topic
+    publisher:
+      predicate: dc-term:publisher
+      label: published by
+    section:
+      predicate: parl:section
+      label: Section
+    subtype:
+      predicate: parl:subtype
+      label: Type
+    category:
+      predicate: parl:category
+      label: Category
+    author:
+      predicate: dc-term:creator
+      label: Author
+      nested: true
+      nested_predicate: rdfs:seeAlso
+
+deposited_papers:
+  route_path: deposited-papers
+  sparql_type: "http://data.parliament.uk/schema/parl#DepositedPaper"
+  base_uri: "http://data.parliament.uk/depositedpapers/{id}"
+  sort_by: dateReceived
+
+  attributes:
+    # Simple properties
+    title: dc-term:title
+    identifier: dc-term:identifier
+    abstract: dc-term:abstract
+    dateReceived: parl:dateReceived
+    lastModified: parl:dateLastModified
+    dateOfOrigin: parl:dateOfOrigin
+    dateOfCommitmentToDeposit: parl:dateOfCommitmentToDeposit
+    depositedFile: parl:depositedFile
+    indexingStatus: parl:indexStatus
+
+    # Nested objects
+    corporateAuthor:
+      uri: parl:corporateAuthor
+      properties:
+        label: skos:prefLabel
+    subject:
+      uri: dc-term:subject
+      properties:
+        label: skos:prefLabel
+    depositingDepartment:
+      uri: parl:department
+      properties:
+        label: skos:prefLabel
+    legislature:
+      uri: parl:legislature
+      properties:
+        label: skos:prefLabel
+    relation:
+      uri: dc-term:relation
+      properties:
+        externalLocation: parl:externalLocation
+        title: dc-term:title
+
+  index_attributes:
+    - abstract
+    - identifier
+    - depositingDepartment
+    - dateReceived
+    - legislature
+
+  required_attributes:
+    - abstract
+    - identifier
+    - dateReceived
+
+  term_type_mappings:
+    subject:
+      predicate: dc-term:subject
+      label: subject
+    publisher:
+      predicate: dc-term:publisher
+      label: published by
+    depositing-department:
+      predicate: parl:department
+      label: deposited by
+    corporate-author:
+      predicate: parl:corporateAuthor
+      label: author
+    legislature:
+      predicate: parl:legislature
+      label: house

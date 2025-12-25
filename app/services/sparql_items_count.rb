@@ -22,9 +22,7 @@ module SparqlItemsCount
   response = SparqlHttpHelper.execute_sparql_post(
     $SPARQL_REQUEST_URI,
     query,
-    $SPARQL_COUNT_HEADERS,
-    model_class,
-    attributes: nil
+    $SPARQL_COUNT_HEADERS
   )
   
   unless response.is_a?(Net::HTTPSuccess)

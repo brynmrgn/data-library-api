@@ -20,8 +20,8 @@ module Api
         filter = filter_builder.filter
         @title = filter_builder.title
 
-        # Determine which attributes to include
-        attributes_to_include = determine_attributes
+        # Determine if all fields are requested
+        all_fields = params[:fields] == 'all'
 
         # Set up pagination
         items_per_page = parse_items_per_page
@@ -35,14 +35,14 @@ module Api
           filter,
           limit: items_per_page,
           offset: @pagy.offset,
-          attributes: attributes_to_include
+          all_fields: all_fields
         )
 
         # Build and render response
         render json: {
           meta: PaginationBuilder.build_metadata(@pagy, @model_class, @items.size),
           links: build_pagination_links,
-          items: JsonFormatterService.format_items_for_index(@items, attributes: attributes_to_include)
+          items: JsonFormatterService.format_items_for_index(@items, all_fields: all_fields)
         }
       rescue ArgumentError => e
         render plain: e.message, status: :not_found
@@ -51,7 +51,7 @@ module Api
       # Returns detailed information for a single item
       #
       def show
-        item = SparqlGetObject.get_item(@type_key, params[:id], attributes: @model_class::ATTRIBUTES.keys)
+        item = SparqlGetObject.get_item(@type_key, params[:id])
 
         unless item
           render plain: 'Item not found', status: :not_found and return
@@ -95,32 +95,6 @@ module Api
           next: @pagy.next ? url_for(params.to_unsafe_h.merge(page: @pagy.next, only_path: false)) : nil,
           prev: @pagy.prev ? url_for(params.to_unsafe_h.merge(page: @pagy.prev, only_path: false)) : nil
         }.compact
-      end
-
-      def determine_attributes
-        # Handle ?fields= parameter
-        if params[:fields] == 'all'
-          # Explicitly request all attributes
-          @model_class::ATTRIBUTES.keys
-        elsif params[:fields].present?
-          # Specific fields requested
-          parse_fields_param(params[:fields], @model_class)
-        else
-          # Default behavior based on action
-          if action_name == 'show'
-            @model_class::ATTRIBUTES.keys
-          else # index
-            @model_class::INDEX_ATTRIBUTES
-          end
-        end
-      end
-
-      def parse_fields_param(fields_string, model_class)
-        requested = fields_string.split(',').map(&:strip).map(&:to_sym)
-        available = model_class::ATTRIBUTES.keys
-
-        # Only return valid attributes
-        requested & available
       end
     end
   end
