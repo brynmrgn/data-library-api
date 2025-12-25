@@ -45,10 +45,10 @@ class ModelGenerator
       }
     end
 
-    # Generate resource_config.rb
+    # Generate resource_config.rb (in config/ not models/)
     puts "Generating resource_config.rb..."
     resource_config_code = generate_resource_config(resource_config)
-    File.write(output_dir.join('resource_config.rb'), resource_config_code)
+    File.write(Rails.root.join('config', 'resource_config.rb'), resource_config_code)
 
     puts "Done! Generated #{config.keys.count} models."
   end
@@ -112,7 +112,7 @@ class ModelGenerator
 
   def self.generate_resource_config(config)
     <<~RUBY
-      # app/models/resource_config.rb
+      # config/resource_config.rb
       # AUTO-GENERATED from config/models.yml - Do not edit!
       # Run: rake generate:models
 
