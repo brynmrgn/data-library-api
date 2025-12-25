@@ -4,20 +4,19 @@ module Api
     class ResourceTypesController < BaseController
       def index
         render json: {
-          resource_types: RESOURCE_CONFIG.map do |key, config|
+          resource_types: RESOURCE_CONFIG.map do |path, config|
             {
-              id: key,
-              path: config[:route_path],
-              url: "#{request.base_url}/api/v1/#{config[:route_path]}",
-              documentation: "#{request.base_url}/api/v1/resource-types/#{key}"
+              id: path,
+              url: "#{request.base_url}/api/v1/#{path}",
+              documentation: "#{request.base_url}/api/v1/resource-types/#{path}"
             }
           end
         }
       end
 
       def show
-        key = params[:id]
-        config = RESOURCE_CONFIG[key]
+        path = params[:id]
+        config = RESOURCE_CONFIG[path]
 
         unless config
           render json: { error: "Unknown resource type: #{params[:id]}" }, status: :not_found
@@ -27,18 +26,17 @@ module Api
         model_class = config[:model_class].constantize
 
         render json: {
-          id: key,
-          path: config[:route_path],
+          id: path,
           endpoints: {
             list: {
-              url: "#{request.base_url}/api/v1/#{config[:route_path]}",
+              url: "#{request.base_url}/api/v1/#{path}",
               method: "GET",
-              description: "Returns paginated list of #{config[:route_path].tr('-', ' ')}"
+              description: "Returns paginated list of #{path.tr('-', ' ')}"
             },
             show: {
-              url: "#{request.base_url}/api/v1/#{config[:route_path]}/:id",
+              url: "#{request.base_url}/api/v1/#{path}/:id",
               method: "GET",
-              description: "Returns a single #{config[:route_path].tr('-', ' ').singularize} by ID"
+              description: "Returns a single #{path.tr('-', ' ').singularize} by ID"
             }
           },
           parameters: {
