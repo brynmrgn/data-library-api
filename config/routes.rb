@@ -8,6 +8,10 @@ Rails.application.routes.draw do
     namespace :v1 do
       root "root#index"
 
+      # Resource type documentation
+      get "resource-types", to: "resource_types#index"
+      get "resource-types/:id", to: "resource_types#show"
+
       RESOURCE_CONFIG.each do |key, config|
         path = config[:route_path]
         controller = config[:controller_name]

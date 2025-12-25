@@ -7,6 +7,7 @@ module Api
           name: "UK Parliament Data Library API",
           version: "v1",
           description: "API for accessing UK Parliament research publications and deposited papers",
+          documentation: "#{request.base_url}/api/v1/resource-types",
           endpoints: build_endpoints,
           parameters: {
             page: "Page number (default: 1)",
