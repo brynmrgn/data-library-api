@@ -39,9 +39,8 @@ class ModelGenerator
       model_code = generate_model(key, model_config)
       File.write(output_dir.join(file_name), model_code)
 
-      # Build resource config entry (keep hyphenated key for consistency with URLs)
+      # Build resource config entry (key is the route path)
       resource_config[key.to_s] = {
-        route_path: model_config['route_path'],
         controller_name: underscored_key,
         model_class: class_name
       }

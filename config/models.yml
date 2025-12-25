@@ -3,7 +3,6 @@
 # Run: rake generate:models to regenerate all model files
 
 research-briefings:
-  route_path: research-briefings
   sparql_type: "http://data.parliament.uk/schema/parl#ResearchBriefing"
   base_uri: "http://data.parliament.uk/resources/{id}"
   sort_by: date
@@ -98,7 +97,6 @@ research-briefings:
       nested_predicate: rdfs:seeAlso
 
 deposited-papers:
-  route_path: deposited-papers
   sparql_type: "http://data.parliament.uk/schema/parl#DepositedPaper"
   base_uri: "http://data.parliament.uk/depositedpapers/{id}"
   sort_by: dateReceived

@@ -24,12 +24,11 @@ module Api
       def build_endpoints
         endpoints = {}
 
-        RESOURCE_CONFIG.each do |key, config|
-          path = config[:route_path]
+        RESOURCE_CONFIG.each do |path, config|
           model_class = config[:model_class].constantize
           term_types = model_class::TERM_TYPE_MAPPINGS.keys
 
-          endpoints[key] = {
+          endpoints[path] = {
             list: {
               url: "#{request.base_url}/api/v1/#{path}",
               method: "GET",

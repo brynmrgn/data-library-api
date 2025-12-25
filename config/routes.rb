@@ -12,8 +12,7 @@ Rails.application.routes.draw do
       get "resource-types", to: "resource_types#index"
       get "resource-types/:id", to: "resource_types#show"
 
-      RESOURCE_CONFIG.each do |key, config|
-        path = config[:route_path]
+      RESOURCE_CONFIG.each do |path, config|
         controller = config[:controller_name]
 
         get "#{path}", to: "object#index", defaults: { format: :json, controller_name: controller }, as: controller.to_sym
