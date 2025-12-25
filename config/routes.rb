@@ -13,7 +13,6 @@ Rails.application.routes.draw do
         controller = config[:controller_name]
 
         get "#{path}", to: "object#index", defaults: { format: :json, controller_name: controller }, as: controller.to_sym
-        get "#{path}/:term_type/:id", to: "object#index", defaults: { format: :json, controller_name: controller }
         get "#{path}/:id", to: "object#show", defaults: { format: :json, controller_name: controller }, as: controller.singularize.to_sym, constraints: { id: /\d+/ }
       end
     end

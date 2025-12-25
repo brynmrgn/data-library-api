@@ -32,18 +32,13 @@ module Api
             list: {
               url: "#{request.base_url}/api/v1/#{path}",
               method: "GET",
-              description: "List all #{path.tr('-', ' ')}"
+              description: "List all #{path.tr('-', ' ')}",
+              filterable_by: term_types
             },
             show: {
               url: "#{request.base_url}/api/v1/#{path}/:id",
               method: "GET",
               description: "Get a single #{path.tr('-', ' ').singularize} by ID"
-            },
-            filter_by_term: {
-              url: "#{request.base_url}/api/v1/#{path}/:term_type/:term_id",
-              method: "GET",
-              description: "Filter by term type and ID",
-              term_types: term_types
             }
           }
         end
@@ -53,10 +48,9 @@ module Api
 
       def build_filtering_info
         {
-          description: "Filter results by term type using either URL path or query parameters",
-          url_format: "/api/v1/:resource/:term_type/:term_id",
-          query_format: "/api/v1/:resource?term_type=:term_id",
-          example: "#{request.base_url}/api/v1/research-briefings/topic/123",
+          description: "Filter results using query parameters",
+          format: "/api/v1/:resource?:term_type=:term_id",
+          example: "#{request.base_url}/api/v1/research-briefings?topic=123",
           term_types_by_resource: RESOURCE_CONFIG.transform_values do |config|
             model_class = config[:model_class].constantize
             model_class::TERM_TYPE_MAPPINGS.transform_values { |v| v[:label] }
