@@ -13,6 +13,7 @@ module Api
             per_page: "Results per page (default: #{$DEFAULT_RESULTS_PER_PAGE}, max: #{$MAX_RESULTS_PER_PAGE})",
             fields: "Comma-separated list of fields to include, or 'all' for all fields"
           },
+          filtering: build_filtering_info,
           source: "Data from UK Parliament SPARQL endpoint"
         }
       end
@@ -24,6 +25,9 @@ module Api
 
         RESOURCE_CONFIG.each do |key, config|
           path = config[:route_path]
+          model_class = config[:model_class].constantize
+          term_types = model_class::TERM_TYPE_MAPPINGS.keys
+
           endpoints[key] = {
             list: {
               url: "#{request.base_url}/api/v1/#{path}",
@@ -34,11 +38,30 @@ module Api
               url: "#{request.base_url}/api/v1/#{path}/:id",
               method: "GET",
               description: "Get a single #{path.tr('-', ' ').singularize} by ID"
+            },
+            filter_by_term: {
+              url: "#{request.base_url}/api/v1/#{path}/:term_type/:term_id",
+              method: "GET",
+              description: "Filter by term type and ID",
+              term_types: term_types
             }
           }
         end
 
         endpoints
+      end
+
+      def build_filtering_info
+        {
+          description: "Filter results by term type using either URL path or query parameters",
+          url_format: "/api/v1/:resource/:term_type/:term_id",
+          query_format: "/api/v1/:resource?term_type=:term_id",
+          example: "#{request.base_url}/api/v1/research-briefings/topic/123",
+          term_types_by_resource: RESOURCE_CONFIG.transform_values do |config|
+            model_class = config[:model_class].constantize
+            model_class::TERM_TYPE_MAPPINGS.transform_values { |v| v[:label] }
+          end
+        }
       end
     end
   end
