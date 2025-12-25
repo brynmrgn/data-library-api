@@ -85,16 +85,24 @@ module Api
         page < 1 ? 1 : page
       end
 
-      # Builds pagination links using URL helpers
+      # Builds pagination links using request path
       #
       def build_pagination_links
+        base_url = "#{request.base_url}#{request.path}"
+        query_params = request.query_parameters.except('page')
+
         {
           self: request.original_url,
-          first: url_for(params.to_unsafe_h.merge(page: 1, only_path: false)),
-          last: url_for(params.to_unsafe_h.merge(page: @pagy.pages, only_path: false)),
-          next: @pagy.next ? url_for(params.to_unsafe_h.merge(page: @pagy.next, only_path: false)) : nil,
-          prev: @pagy.prev ? url_for(params.to_unsafe_h.merge(page: @pagy.prev, only_path: false)) : nil
+          first: build_page_url(base_url, query_params, 1),
+          last: build_page_url(base_url, query_params, @pagy.pages),
+          next: @pagy.next ? build_page_url(base_url, query_params, @pagy.next) : nil,
+          prev: @pagy.prev ? build_page_url(base_url, query_params, @pagy.prev) : nil
         }.compact
+      end
+
+      def build_page_url(base_url, query_params, page)
+        params = query_params.merge(page: page)
+        "#{base_url}?#{params.to_query}"
       end
     end
   end
