@@ -1,14 +1,14 @@
-# app/models/resource_config.rb
+# config/resource_config.rb
 # AUTO-GENERATED from config/models.yml - Do not edit!
 # Run: rake generate:models
 
 RESOURCE_CONFIG = {
-  :research_briefings => {
+  "research-briefings" => {
     :route_path => "research-briefings",
     :controller_name => "research_briefings",
     :model_class => "ResearchBriefing"
   },
-  :deposited_papers => {
+  "deposited-papers" => {
     :route_path => "deposited-papers",
     :controller_name => "deposited_papers",
     :model_class => "DepositedPaper"

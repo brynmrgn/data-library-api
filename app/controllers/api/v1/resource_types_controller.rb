@@ -16,7 +16,7 @@ module Api
       end
 
       def show
-        key = params[:id].to_sym
+        key = params[:id]
         config = RESOURCE_CONFIG[key]
 
         unless config
