@@ -2,7 +2,7 @@
 # Single source of truth for all Data Library API models
 # Run: rake generate:models to regenerate all model files
 
-research_briefings:
+research-briefings:
   route_path: research-briefings
   sparql_type: "http://data.parliament.uk/schema/parl#ResearchBriefing"
   base_uri: "http://data.parliament.uk/resources/{id}"
@@ -97,7 +97,7 @@ research_briefings:
       nested: true
       nested_predicate: rdfs:seeAlso
 
-deposited_papers:
+deposited-papers:
   route_path: deposited-papers
   sparql_type: "http://data.parliament.uk/schema/parl#DepositedPaper"
   base_uri: "http://data.parliament.uk/depositedpapers/{id}"

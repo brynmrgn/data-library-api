@@ -28,8 +28,10 @@ class ModelGenerator
     resource_config = {}
 
     config.each do |key, model_config|
-      class_name = key.to_s.classify
-      file_name = "#{key.to_s.singularize}.rb"
+      # Convert hyphenated key to underscored for Ruby naming
+      underscored_key = key.to_s.tr('-', '_')
+      class_name = underscored_key.classify
+      file_name = "#{underscored_key.singularize}.rb"
 
       puts "Generating #{class_name}..."
 
@@ -37,10 +39,10 @@ class ModelGenerator
       model_code = generate_model(key, model_config)
       File.write(output_dir.join(file_name), model_code)
 
-      # Build resource config entry
-      resource_config[key.to_sym] = {
+      # Build resource config entry (keep hyphenated key for consistency with URLs)
+      resource_config[key.to_s] = {
         route_path: model_config['route_path'],
-        controller_name: key.to_s,
+        controller_name: underscored_key,
         model_class: class_name
       }
     end
@@ -54,7 +56,8 @@ class ModelGenerator
   end
 
   def self.generate_model(key, config)
-    class_name = key.to_s.classify
+    underscored_key = key.to_s.tr('-', '_')
+    class_name = underscored_key.classify
 
     # Parse attributes from config
     attributes = parse_attributes(config['attributes'])
@@ -69,7 +72,7 @@ class ModelGenerator
     frame = generate_frame(config, attributes)
 
     <<~RUBY
-      # app/models/#{key.to_s.singularize}.rb
+      # app/models/#{underscored_key.singularize}.rb
       # AUTO-GENERATED from config/models.yml - Do not edit!
       # Run: rake generate:models
 
