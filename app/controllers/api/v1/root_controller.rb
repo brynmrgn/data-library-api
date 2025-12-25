@@ -48,9 +48,12 @@ module Api
 
       def build_filtering_info
         {
-          description: "Filter results using query parameters",
+          description: "Filter results using query parameters (multiple filters supported)",
           format: "/api/v1/:resource?:term_type=:term_id",
-          example: "#{request.base_url}/api/v1/research-briefings?topic=123",
+          examples: [
+            "#{request.base_url}/api/v1/research-briefings?topic=123",
+            "#{request.base_url}/api/v1/research-briefings?topic=123&publisher=456"
+          ],
           term_types_by_resource: RESOURCE_CONFIG.transform_values do |config|
             model_class = config[:model_class].constantize
             model_class::TERM_TYPE_MAPPINGS.transform_values { |v| v[:label] }
