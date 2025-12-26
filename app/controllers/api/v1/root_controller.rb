@@ -4,9 +4,9 @@ module Api
     class RootController < BaseController
       def index
         render json: {
-          name: "UK Parliament Data Library API",
+          name: "UK Parliament Linked Data API",
           version: "v1",
-          description: "API for accessing UK Parliament research publications and deposited papers",
+          description: "API for accessing data from UK Parliament's Linked Data platforms.",
           documentation: "#{request.base_url}/api/v1/resource-types",
           endpoints: build_endpoints,
           parameters: {

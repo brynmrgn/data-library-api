@@ -18,15 +18,10 @@ class ApplicationController < ActionController::Base
 
   
   before_action do
-    #expires_in 3.minutes, :public => true  
-    create_crumb_container
+    #expires_in 3.minutes, :public => true
     create_queries_container
   end
 
-  def create_crumb_container
-    @crumb = []
-  end
-  
   def create_queries_container
     @queries = []
   end

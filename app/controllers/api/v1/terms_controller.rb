@@ -7,6 +7,10 @@ module Api
     class TermsController < ApplicationController
       SPARQL_ENDPOINT = 'https://data-odp.parliament.uk/sparql'.freeze
 
+      # Cache the total count (it rarely changes)
+      TERMS_COUNT_CACHE_KEY = 'terms_total_count'.freeze
+      TERMS_COUNT_CACHE_TTL = 1.hour
+
       def index
         page = [params[:page].to_i, 1].max
         per_page = [[params[:per_page].to_i, 1].max, 250].min
@@ -30,10 +34,6 @@ module Api
 
       private
 
-      # Cache the total count (it rarely changes)
-      TERMS_COUNT_CACHE_KEY = 'terms_total_count'.freeze
-      TERMS_COUNT_CACHE_TTL = 1.hour
-
       def fetch_all_terms(page, per_page)
         offset = (page - 1) * per_page
 
@@ -42,20 +42,7 @@ module Api
           fetch_terms_count
         end
 
-        # Get paginated terms (only numeric IDs, not uncontrolled terms)
-        query = <<~SPARQL
-          PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-
-          SELECT DISTINCT ?term ?label
-          WHERE {
-            ?term skos:prefLabel ?label .
-            FILTER(REGEX(STR(?term), "^http://data.parliament.uk/terms/[0-9]+$"))
-          }
-          ORDER BY ?label
-          LIMIT #{per_page}
-          OFFSET #{offset}
-        SPARQL
-
+        query = Term.index_query(limit: per_page, offset: offset)
         response = sparql_request(query)
         bindings = response&.dig('results', 'bindings') || []
 
@@ -64,7 +51,7 @@ module Api
           {
             id: uri&.split('/')&.last,
             uri: uri,
-            label: binding.dig('label', 'value')
+            label: build_label(binding)
           }
         end
 
@@ -75,57 +62,36 @@ module Api
             per_page: per_page,
             total_pages: total ? (total.to_f / per_page).ceil : nil
           },
-          items: items
+          items: items,
+          queries: [query]
         }
       end
 
       def fetch_terms_count
-        query = <<~SPARQL
-          PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-
-          SELECT (COUNT(DISTINCT ?term) as ?count)
-          WHERE {
-            ?term skos:prefLabel ?label .
-            FILTER(REGEX(STR(?term), "^http://data.parliament.uk/terms/[0-9]+$"))
-          }
-        SPARQL
-
-        response = sparql_request(query)
+        response = sparql_request(Term::COUNT_QUERY)
         response&.dig('results', 'bindings', 0, 'count', 'value').to_i
       rescue
         nil
       end
 
       def fetch_term(term_id)
-        query = <<~SPARQL
-          PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-          PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-
-          SELECT ?termLabel ?firstName ?surname
-          WHERE {
-            VALUES ?item {
-              <http://data.parliament.uk/terms/#{term_id}>
-            }
-            ?item skos:prefLabel ?termLabel .
-            OPTIONAL { ?item foaf:firstName ?firstName . }
-            OPTIONAL { ?item foaf:surname ?surname . }
-          }
-        SPARQL
-
+        query = Term.show_query(term_id)
         response = sparql_request(query)
         return nil unless response
 
-        binding = response.dig('results', 'bindings', 0)
-        return nil unless binding
+        bindings = response.dig('results', 'bindings')
+        return nil if bindings.blank?
 
-        label = build_label(binding)
-        return nil unless label
+        # Convert predicate/object pairs to a hash
+        data = {}
+        bindings.each do |binding|
+          predicate = binding.dig('predicate', 'value')
+          object = binding.dig('object', 'value')
+          data[predicate] = object if predicate && object
+        end
 
-        {
-          id: term_id,
-          uri: "http://data.parliament.uk/terms/#{term_id}",
-          label: label
-        }
+        term = Term.new(id: term_id, data: data)
+        term.to_h.merge(queries: [query])
       end
 
       def build_label(binding)
@@ -134,14 +100,14 @@ module Api
           first_name = binding['firstName']['value']
           surname = binding['surname']['value']
           "#{first_name} #{surname}"
-        elsif binding['termLabel']
-          term_label = binding['termLabel']['value']
+        elsif binding['prefLabel']
+          pref_label = binding['prefLabel']['value']
 
           # If it looks like "Surname, Firstname", reverse it
-          if term_label =~ /^(.+),\s*(.+)$/
+          if pref_label =~ /^(.+),\s*(.+)$/
             "#{$2} #{$1}"
           else
-            term_label
+            pref_label
           end
         end
       end
@@ -153,7 +119,7 @@ module Api
         http.verify_mode = OpenSSL::SSL::VERIFY_PEER
         http.verify_callback = ->(_preverify_ok, _store_ctx) { true }
         http.open_timeout = 5
-        http.read_timeout = 10
+        http.read_timeout = 30
 
         request = Net::HTTP::Post.new(uri)
         request['Content-Type'] = 'application/sparql-query'

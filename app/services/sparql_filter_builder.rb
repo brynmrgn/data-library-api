@@ -4,40 +4,24 @@
 # Supports multiple filter parameters (e.g., ?topic=123&publisher=456)
 #
 class SparqlFilterBuilder
-  attr_reader :filter, :title
-
-  def initialize(model_class, params, helpers)
+  def initialize(model_class, params)
     @model_class = model_class
     @params = params
-    @helpers = helpers
-    @filter = ""
-    @title = ""
   end
 
-  # Builds filter clause based on request parameters
-  # Returns self for method chaining
+  # Builds SPARQL filter clause string from request parameters
   #
   def build
     mappings = @model_class::TERM_TYPE_MAPPINGS
     active_filters = find_active_filters(mappings)
 
-    return self if active_filters.empty?
+    return "" if active_filters.empty?
 
-    filter_clauses = []
-    title_parts = []
-
-    active_filters.each do |term_type, term_id|
-      mapping = mappings[term_type]
-      term_label = @helpers.get_term_label(term_id)
-
-      title_parts << "#{mapping[:label]}: #{term_label}"
-      filter_clauses << build_filter_clause(mapping, term_id)
+    filter_clauses = active_filters.map do |term_type, term_id|
+      build_filter_clause(mappings[term_type], term_id)
     end
 
-    @title = ": #{title_parts.join(', ')}"
-    @filter = filter_clauses.join("\n")
-
-    self
+    filter_clauses.join("\n")
   end
 
   private

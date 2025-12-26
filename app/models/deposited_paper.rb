@@ -4,7 +4,6 @@
 
 class DepositedPaper < LinkedDataResource
   include SparqlQueryable
-  include PresentationHelpers
 
   SPARQL_TYPE = '<http://data.parliament.uk/schema/parl#DepositedPaper>'.freeze
   SORT_BY = :dateReceived

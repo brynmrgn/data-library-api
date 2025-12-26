@@ -8,7 +8,6 @@ module Api
     class ObjectController < BaseController
       include SparqlHttpHelper
       include SparqlItemsCount
-      include TermsHelper
 
       before_action :setup_model_and_type, only: %i[index show]
 
@@ -16,9 +15,7 @@ module Api
       #
       def index
         # Build filter clause
-        filter_builder = SparqlFilterBuilder.new(@model_class, params, helpers).build
-        filter = filter_builder.filter
-        @title = filter_builder.title
+        filter = SparqlFilterBuilder.new(@model_class, params).build
 
         # Determine if all fields are requested
         all_fields = params[:fields] == 'all'
@@ -30,19 +27,21 @@ module Api
         @pagy = Pagy.new(count: count, limit: items_per_page, page: page)
 
         # Fetch items
-        @items = SparqlGetObject.get_items(
+        result = SparqlGetObject.get_items(
           @type_key,
           filter,
           limit: items_per_page,
           offset: @pagy.offset,
           all_fields: all_fields
         )
+        @items = result[:items]
 
         # Build and render response
         render json: {
           meta: PaginationBuilder.build_metadata(@pagy, @model_class, @items.size),
           links: build_pagination_links,
-          items: JsonFormatterService.format_items_for_index(@items, all_fields: all_fields)
+          items: JsonFormatterService.format_items_for_index(@items, all_fields: all_fields),
+          queries: [result[:query]]
         }
       rescue ArgumentError => e
         render plain: e.message, status: :not_found
@@ -51,13 +50,13 @@ module Api
       # Returns detailed information for a single item
       #
       def show
-        item = SparqlGetObject.get_item(@type_key, params[:id])
+        result = SparqlGetObject.get_item(@type_key, params[:id])
 
-        unless item
+        unless result[:item]
           render plain: 'Item not found', status: :not_found and return
         end
 
-        render json: JsonFormatterService.format_item_for_show(item)
+        render json: JsonFormatterService.format_item_for_show(result[:item]).merge(queries: [result[:query]])
       end
 
       private
