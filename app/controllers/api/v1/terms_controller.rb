@@ -33,28 +33,14 @@ module Api
       def fetch_all_terms(page, per_page)
         offset = (page - 1) * per_page
 
-        # First get total count
-        count_query = <<~SPARQL
-          PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-
-          SELECT (COUNT(DISTINCT ?term) as ?count)
-          WHERE {
-            ?term skos:prefLabel ?label .
-            FILTER(STRSTARTS(STR(?term), "http://data.parliament.uk/terms/"))
-          }
-        SPARQL
-
-        count_response = sparql_request(count_query)
-        total = count_response&.dig('results', 'bindings', 0, 'count', 'value').to_i
-
-        # Then get paginated terms
+        # Get paginated terms (only numeric IDs, not uncontrolled terms)
         query = <<~SPARQL
           PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
           SELECT DISTINCT ?term ?label
           WHERE {
             ?term skos:prefLabel ?label .
-            FILTER(STRSTARTS(STR(?term), "http://data.parliament.uk/terms/"))
+            FILTER(REGEX(STR(?term), "^http://data.parliament.uk/terms/[0-9]+$"))
           }
           ORDER BY ?label
           LIMIT #{per_page}
@@ -75,10 +61,8 @@ module Api
 
         {
           meta: {
-            total: total,
             page: page,
-            per_page: per_page,
-            total_pages: (total.to_f / per_page).ceil
+            per_page: per_page
           },
           items: items
         }
