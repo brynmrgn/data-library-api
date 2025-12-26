@@ -43,6 +43,20 @@ module Api
           }
         end
 
+        # Add terms endpoint
+        endpoints["terms"] = {
+          list: {
+            url: "#{request.base_url}/api/v1/terms",
+            method: "GET",
+            description: "List all parliamentary thesaurus terms"
+          },
+          show: {
+            url: "#{request.base_url}/api/v1/terms/:id",
+            method: "GET",
+            description: "Get a single term by ID"
+          }
+        }
+
         endpoints
       end
 
