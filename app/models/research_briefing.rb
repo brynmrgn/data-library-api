@@ -4,7 +4,6 @@
 
 class ResearchBriefing < LinkedDataResource
   include SparqlQueryable
-  include PresentationHelpers
 
   SPARQL_TYPE = '<http://data.parliament.uk/schema/parl#ResearchBriefing>'.freeze
   SORT_BY = :date

@@ -77,7 +77,6 @@ class ModelGenerator
 
       class #{class_name} < LinkedDataResource
         include SparqlQueryable
-        include PresentationHelpers
 
         SPARQL_TYPE = '<#{config['sparql_type']}>'.freeze
         SORT_BY = :#{config['sort_by']}

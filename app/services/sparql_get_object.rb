@@ -1,5 +1,6 @@
 # app/services/sparql_get_object.rb
 class SparqlGetObject
+  # Returns { items: [...], query: "..." }
   def self.get_items(type_key, filter, limit:, offset:, all_fields: false)
     model_class = get_model_class(type_key)
 
@@ -16,14 +17,15 @@ class SparqlGetObject
     )
 
     unless response.is_a?(Net::HTTPSuccess)
-      return []
+      return { items: [], query: query }
     end
 
     results = JSON.parse(response.body)
 
-    instantiate_items(results, type_key)
+    { items: instantiate_items(results, type_key), query: query }
   end
 
+  # Returns { item: ..., query: "..." }
   def self.get_item(type_key, id)
     model_class = get_model_class(type_key)
 
@@ -46,7 +48,7 @@ class SparqlGetObject
 
     unless response.is_a?(Net::HTTPSuccess)
       puts "[SPARQL get_item] ERROR #{response.code} #{response.body}"
-      return nil
+      return { item: nil, query: query }
     end
 
     puts "[SPARQL get_item] Raw response body (truncated): #{response.body[0..1000]}"
@@ -60,7 +62,7 @@ class SparqlGetObject
 
     puts "[SPARQL get_item] Instantiated #{items.length} items for #{model_class.name} id=#{id}"
 
-    items.first
+    { item: items.first, query: query }
   end
 
   private
