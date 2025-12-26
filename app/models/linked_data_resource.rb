@@ -1,10 +1,5 @@
 # app/models/linked_data_resource.rb
 class LinkedDataResource
-  include SparqlHttpHelper
-  require 'cgi'
-
-  QUERY_MODULE = SparqlQueryBuilder
-
   attr_reader :id, :data, :resource_type
   
   def initialize(id:, data:, resource_type: nil)

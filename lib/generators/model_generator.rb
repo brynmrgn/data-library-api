@@ -76,8 +76,6 @@ class ModelGenerator
       # Run: rake generate:models
 
       class #{class_name} < LinkedDataResource
-        include SparqlQueryable
-
         SPARQL_TYPE = '<#{config['sparql_type']}>'.freeze
         SORT_BY = :#{config['sort_by']}
 

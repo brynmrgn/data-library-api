@@ -1,11 +1,11 @@
-# app/controllers/api/v1/object_controller.rb
+# app/controllers/api/v1/linked_data_resource_controller.rb
 #
-# ObjectController handles list (index) and detail (show) views for all
+# LinkedDataResourceController handles list (index) and detail (show) views for all
 # linked data resource types, delegating formatting and filtering to services
 #
 module Api
   module V1
-    class ObjectController < BaseController
+    class LinkedDataResourceController < BaseController
       include SparqlHttpHelper
       include SparqlItemsCount
 
