@@ -13,6 +13,7 @@ Rails.application.routes.draw do
       get "resource-types/:id", to: "resource_types#show"
 
       # Terms lookup
+      get "terms", to: "terms#index"
       get "terms/:id", to: "terms#show", constraints: { id: /\d+/ }
 
       RESOURCE_CONFIG.each do |path, config|

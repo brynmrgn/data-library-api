@@ -7,6 +7,16 @@ module Api
     class TermsController < ApplicationController
       SPARQL_ENDPOINT = 'https://data-odp.parliament.uk/sparql'.freeze
 
+      def index
+        page = [params[:page].to_i, 1].max
+        per_page = [[params[:per_page].to_i, 1].max, 250].min
+        per_page = 20 if params[:per_page].blank?
+
+        terms = fetch_all_terms(page, per_page)
+
+        render json: terms
+      end
+
       def show
         term_id = params[:id]
         term_data = fetch_term(term_id)
@@ -19,6 +29,60 @@ module Api
       end
 
       private
+
+      def fetch_all_terms(page, per_page)
+        offset = (page - 1) * per_page
+
+        # First get total count
+        count_query = <<~SPARQL
+          PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+          SELECT (COUNT(DISTINCT ?term) as ?count)
+          WHERE {
+            ?term skos:prefLabel ?label .
+            FILTER(STRSTARTS(STR(?term), "http://data.parliament.uk/terms/"))
+          }
+        SPARQL
+
+        count_response = sparql_request(count_query)
+        total = count_response&.dig('results', 'bindings', 0, 'count', 'value').to_i
+
+        # Then get paginated terms
+        query = <<~SPARQL
+          PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+          SELECT DISTINCT ?term ?label
+          WHERE {
+            ?term skos:prefLabel ?label .
+            FILTER(STRSTARTS(STR(?term), "http://data.parliament.uk/terms/"))
+          }
+          ORDER BY ?label
+          LIMIT #{per_page}
+          OFFSET #{offset}
+        SPARQL
+
+        response = sparql_request(query)
+        bindings = response&.dig('results', 'bindings') || []
+
+        items = bindings.map do |binding|
+          uri = binding.dig('term', 'value')
+          {
+            id: uri&.split('/')&.last,
+            uri: uri,
+            label: binding.dig('label', 'value')
+          }
+        end
+
+        {
+          meta: {
+            total: total,
+            page: page,
+            per_page: per_page,
+            total_pages: (total.to_f / per_page).ceil
+          },
+          items: items
+        }
+      end
 
       def fetch_term(term_id)
         query = <<~SPARQL
