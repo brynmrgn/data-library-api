@@ -19,8 +19,8 @@ Rails.application.routes.draw do
       RESOURCE_CONFIG.each do |path, config|
         controller = config[:controller_name]
 
-        get "#{path}", to: "object#index", defaults: { format: :json, controller_name: controller }, as: controller.to_sym
-        get "#{path}/:id", to: "object#show", defaults: { format: :json, controller_name: controller }, as: controller.singularize.to_sym, constraints: { id: /\d+/ }
+        get "#{path}", to: "linked_data_resource#index", defaults: { format: :json, controller_name: controller }, as: controller.to_sym
+        get "#{path}/:id", to: "linked_data_resource#show", defaults: { format: :json, controller_name: controller }, as: controller.singularize.to_sym, constraints: { id: /\d+/ }
       end
     end
   end
