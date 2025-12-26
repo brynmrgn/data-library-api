@@ -12,6 +12,9 @@ Rails.application.routes.draw do
       get "resource-types", to: "resource_types#index"
       get "resource-types/:id", to: "resource_types#show"
 
+      # Terms lookup
+      get "terms/:id", to: "terms#show", constraints: { id: /\d+/ }
+
       RESOURCE_CONFIG.each do |path, config|
         controller = config[:controller_name]
 
