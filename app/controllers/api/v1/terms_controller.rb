@@ -30,8 +30,17 @@ module Api
 
       private
 
+      # Cache the total count (it rarely changes)
+      TERMS_COUNT_CACHE_KEY = 'terms_total_count'.freeze
+      TERMS_COUNT_CACHE_TTL = 1.hour
+
       def fetch_all_terms(page, per_page)
         offset = (page - 1) * per_page
+
+        # Get total count (cached)
+        total = Rails.cache.fetch(TERMS_COUNT_CACHE_KEY, expires_in: TERMS_COUNT_CACHE_TTL) do
+          fetch_terms_count
+        end
 
         # Get paginated terms (only numeric IDs, not uncontrolled terms)
         query = <<~SPARQL
@@ -61,11 +70,30 @@ module Api
 
         {
           meta: {
+            total: total,
             page: page,
-            per_page: per_page
+            per_page: per_page,
+            total_pages: total ? (total.to_f / per_page).ceil : nil
           },
           items: items
         }
+      end
+
+      def fetch_terms_count
+        query = <<~SPARQL
+          PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+          SELECT (COUNT(DISTINCT ?term) as ?count)
+          WHERE {
+            ?term skos:prefLabel ?label .
+            FILTER(REGEX(STR(?term), "^http://data.parliament.uk/terms/[0-9]+$"))
+          }
+        SPARQL
+
+        response = sparql_request(query)
+        response&.dig('results', 'bindings', 0, 'count', 'value').to_i
+      rescue
+        nil
       end
 
       def fetch_term(term_id)
