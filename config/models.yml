@@ -6,6 +6,11 @@ research-briefings:
   sparql_type: "http://data.parliament.uk/schema/parl#ResearchBriefing"
   base_uri: "http://data.parliament.uk/resources/{id}"
   sort_by: date
+  sort_order: desc
+  sortable_fields:
+    - date
+    - title
+    - identifier
 
   attributes:
     # Simple properties
@@ -100,6 +105,12 @@ deposited-papers:
   sparql_type: "http://data.parliament.uk/schema/parl#DepositedPaper"
   base_uri: "http://data.parliament.uk/depositedpapers/{id}"
   sort_by: dateReceived
+  sort_order: desc
+  sortable_fields:
+    - dateReceived
+    - title
+    - identifier
+    - lastModified
 
   attributes:
     # Simple properties

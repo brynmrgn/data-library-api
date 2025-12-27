@@ -20,6 +20,9 @@ module Api
         # Determine if all fields are requested
         all_fields = params[:fields] == 'all'
 
+        # Parse sort parameters
+        sort_field, sort_order = parse_sort_params
+
         # Set up pagination
         items_per_page = parse_items_per_page
         page = parse_page_number
@@ -32,13 +35,21 @@ module Api
           filter,
           limit: items_per_page,
           offset: @pagy.offset,
-          all_fields: all_fields
+          all_fields: all_fields,
+          sort_field: sort_field,
+          sort_order: sort_order
         )
         @items = result[:items]
 
         # Build and render response
         render json: {
-          meta: PaginationBuilder.build_metadata(@pagy, @model_class, @items.size),
+          meta: PaginationBuilder.build_metadata(@pagy, @model_class, @items.size).merge(
+            sort: {
+              field: (sort_field || @model_class::DEFAULT_SORT_FIELD).to_s,
+              order: (sort_order || @model_class::DEFAULT_SORT_ORDER).to_s,
+              sortable_fields: @model_class::SORTABLE_FIELDS.map(&:to_s)
+            }
+          ),
           links: build_pagination_links,
           items: JsonFormatterService.format_items_for_index(@items, all_fields: all_fields),
           queries: [result[:query]]
@@ -82,6 +93,26 @@ module Api
       def parse_page_number
         page = params[:page].to_i
         page < 1 ? 1 : page
+      end
+
+      # Parses and validates sort parameters
+      # Returns [sort_field, sort_order] or [nil, nil] for defaults
+      #
+      def parse_sort_params
+        sort_field = params[:sort].presence&.to_sym
+        sort_order = params[:order].presence&.to_sym
+
+        # Validate sort field if provided
+        if sort_field && !@model_class::SORTABLE_FIELDS.include?(sort_field)
+          raise ArgumentError, "Invalid sort field '#{sort_field}'. Valid fields: #{@model_class::SORTABLE_FIELDS.join(', ')}"
+        end
+
+        # Validate sort order if provided
+        if sort_order && !%i[asc desc].include?(sort_order)
+          raise ArgumentError, "Invalid sort order '#{sort_order}'. Valid orders: asc, desc"
+        end
+
+        [sort_field, sort_order]
       end
 
       # Builds pagination links using request path

@@ -14,13 +14,38 @@ class SparqlQueryBuilder
     "foaf" => "http://xmlns.com/foaf/0.1/"
   }.freeze
 
-  def self.list_query(model_class, filter, offset:, limit:, all_fields: false)
+  def self.list_query(model_class, filter, offset:, limit:, all_fields: false, sort_field: nil, sort_order: nil)
     query_template = all_fields ? model_class::LIST_QUERY_ALL : model_class::LIST_QUERY
+
+    # Use defaults from model if not specified
+    sort_field ||= model_class::DEFAULT_SORT_FIELD
+    sort_order ||= model_class::DEFAULT_SORT_ORDER
+
+    # Get the predicate URI for the sort field
+    sort_binding = build_sort_binding(model_class, sort_field)
+    sort_direction = sort_order.to_s.upcase == 'ASC' ? 'ASC' : 'DESC'
 
     query_template
       .gsub('{{FILTER}}', filter.to_s)
       .gsub('{{OFFSET}}', Integer(offset).to_s)
       .gsub('{{LIMIT}}', Integer(limit).to_s)
+      .gsub('{{SORT_BINDING}}', sort_binding)
+      .gsub('{{SORT_DIRECTION}}', sort_direction)
+  end
+
+  # Builds the SPARQL binding for the sort field
+  # e.g., "dc-term:date ?sortValue"
+  #
+  def self.build_sort_binding(model_class, sort_field)
+    attr_config = model_class::ATTRIBUTES[sort_field.to_sym]
+
+    predicate = if attr_config.is_a?(Hash)
+                  attr_config[:uri]
+                else
+                  attr_config
+                end
+
+    "#{predicate} ?sortValue"
   end
 
   def self.show_query(model_class, filter)

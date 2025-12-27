@@ -77,7 +77,9 @@ class ModelGenerator
 
       class #{class_name} < LinkedDataResource
         SPARQL_TYPE = '<#{config['sparql_type']}>'.freeze
-        SORT_BY = :#{config['sort_by']}
+        DEFAULT_SORT_FIELD = :#{config['sort_by']}
+        DEFAULT_SORT_ORDER = :#{config['sort_order'] || 'desc'}
+        SORTABLE_FIELDS = #{(config['sortable_fields'] || [config['sort_by']]).map(&:to_sym).inspect}.freeze
 
         ATTRIBUTES = #{format_hash(attributes)}.freeze
 
@@ -155,8 +157,6 @@ class ModelGenerator
 
   def self.generate_list_query(config, attrs_to_include, all_attributes)
     sparql_type = "<#{config['sparql_type']}>"
-    sort_attr = config['sort_by'].to_sym
-    sort_uri = get_uri(all_attributes[sort_attr])
     required_attrs = config['required_attributes'].map(&:to_sym)
 
     construct_clause = build_construct_clause(attrs_to_include, all_attributes)
@@ -179,10 +179,10 @@ class ModelGenerator
           WHERE {
             ?item a #{sparql_type} ;
               #{required_where.gsub(/\.$/, '')} ;
-              #{sort_uri} ?sortValue .
+              {{SORT_BINDING}} .
             {{FILTER}}
           }
-          ORDER BY DESC(?sortValue)
+          ORDER BY {{SORT_DIRECTION}}(?sortValue)
           OFFSET {{OFFSET}}
           LIMIT {{LIMIT}}
         }
