@@ -1,10 +1,12 @@
 # app/controllers/api/v1/base_controller.rb
+#
+# Base controller for API endpoints.
+# Disables CSRF protection for API access.
+#
 module Api
   module V1
     class BaseController < ApplicationController
       skip_before_action :verify_authenticity_token
-
-      rescue_from ActiveRecord::RecordNotFound, with: :not_found
 
       private
 
