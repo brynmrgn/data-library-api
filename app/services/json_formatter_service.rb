@@ -34,8 +34,7 @@ def self.format_item(item, attributes_to_include: nil, include_base_fields: true
       # Nested attribute - always return as array for consistency
       value = [value] unless value.is_a?(Array)
       formatted = value.map { |v| extract_nested_properties(v, config[:properties]) }
-      # Sort by numeric suffix in ID (e.g., .../authors/1, .../authors/2)
-      result[attr_name] = formatted.sort_by { |v| v[:id].to_s[/\d+$/].to_i }
+      result[attr_name] = sort_nested_items(formatted, config[:properties])
     else
       # Simple value
       result[attr_name] = format_simple_value(value)
@@ -72,6 +71,23 @@ end
   
   private
   
+  # Sorts nested items appropriately based on their type
+  # - Sub-objects (author, attachment, related_link) have IDs like .../authors/1 - sort by number
+  # - Term references (topic, subject, etc.) have IDs like .../terms/12345 - sort by label
+  #
+  def self.sort_nested_items(items, properties)
+    return items if items.empty?
+
+    # Check if this is a term reference (has :label property) or a sub-object
+    if properties.key?(:label)
+      # Term reference - sort alphabetically by label
+      items.sort_by { |v| v[:label].to_s.downcase }
+    else
+      # Sub-object (author, attachment, etc.) - sort by numeric suffix in ID
+      items.sort_by { |v| v[:id].to_s[/\d+$/].to_i }
+    end
+  end
+
   # Extracts specific properties from a nested object
   # @param obj [Hash] The nested object from the JSON-LD response
   # @param properties [Hash] Map of property names to their predicates
