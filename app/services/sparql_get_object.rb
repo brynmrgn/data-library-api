@@ -1,9 +1,14 @@
 # app/services/sparql_get_object.rb
 #
-# Fetches linked data resources from SPARQL endpoint
-# Handles both list (index) and single item (show) requests
+# Fetches linked data resources from SPARQL endpoint.
+# Handles both list (index) and single item (show) requests.
+# Results are cached to reduce SPARQL endpoint load.
 #
+require 'digest'
+
 class SparqlGetObject
+  LIST_CACHE_TTL = 5.minutes
+  SHOW_CACHE_TTL = 15.minutes
   # Fetches paginated list of items
   #
   # @param type_key [Symbol] Resource type (e.g., :research_briefing)
@@ -28,8 +33,23 @@ class SparqlGetObject
       sort_order: sort_order
     )
 
-    Rails.logger.debug { "[SPARQL] get_items for #{model_class.name}" }
+    # Build cache key from all query parameters
+    cache_params = "#{filter}|#{limit}|#{offset}|#{all_fields}|#{sort_field}|#{sort_order}"
+    cache_key = "sparql/list/#{type_key}/#{Digest::MD5.hexdigest(cache_params)}"
 
+    results = Rails.cache.fetch(cache_key, expires_in: LIST_CACHE_TTL) do
+      Rails.logger.debug { "[SPARQL] get_items for #{model_class.name} (cache miss)" }
+      fetch_list_from_sparql(query, model_class)
+    end
+
+    return { items: [], query: query } if results.nil?
+
+    { items: instantiate_items(results, type_key), query: query }
+  end
+
+  # Fetches list data from SPARQL endpoint (called on cache miss)
+  #
+  def self.fetch_list_from_sparql(query, model_class)
     response = SparqlHttpHelper.execute_sparql_post(
       $SPARQL_REQUEST_URI,
       query,
@@ -39,12 +59,10 @@ class SparqlGetObject
 
     unless response.is_a?(Net::HTTPSuccess)
       Rails.logger.error { "[SPARQL] get_items failed: #{response.code}" }
-      return { items: [], query: query }
+      return nil
     end
 
-    results = JSON.parse(response.body)
-
-    { items: instantiate_items(results, type_key), query: query }
+    JSON.parse(response.body)
   end
 
   # Fetches a single item by ID
@@ -61,8 +79,23 @@ class SparqlGetObject
 
     query = SparqlQueryBuilder.show_query(model_class, filter)
 
-    Rails.logger.debug { "[SPARQL] get_item for #{model_class.name} id=#{id}" }
+    cache_key = "sparql/item/#{type_key}/#{id}"
 
+    results = Rails.cache.fetch(cache_key, expires_in: SHOW_CACHE_TTL) do
+      Rails.logger.debug { "[SPARQL] get_item for #{model_class.name} id=#{id} (cache miss)" }
+      fetch_item_from_sparql(query, model_class)
+    end
+
+    return { item: nil, query: query } if results.nil?
+
+    items = instantiate_items(results, type_key)
+
+    { item: items.first, query: query }
+  end
+
+  # Fetches single item data from SPARQL endpoint (called on cache miss)
+  #
+  def self.fetch_item_from_sparql(query, model_class)
     response = SparqlHttpHelper.execute_sparql_post(
       $SPARQL_REQUEST_URI,
       query,
@@ -72,7 +105,7 @@ class SparqlGetObject
 
     unless response.is_a?(Net::HTTPSuccess)
       Rails.logger.error { "[SPARQL] get_item failed: #{response.code} #{response.body}" }
-      return { item: nil, query: query }
+      return nil
     end
 
     results = JSON.parse(response.body)
@@ -80,9 +113,7 @@ class SparqlGetObject
     # Wrap single item in @graph for consistency with get_items
     results = { "@graph" => [results] } unless results['@graph']
 
-    items = instantiate_items(results, type_key)
-
-    { item: items.first, query: query }
+    results
   end
 
   private

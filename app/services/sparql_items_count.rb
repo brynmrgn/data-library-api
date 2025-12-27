@@ -2,6 +2,7 @@
 #
 # Gets total item count for pagination.
 # Executes a COUNT query against the SPARQL endpoint.
+# Results are cached for 10 minutes to reduce SPARQL endpoint load.
 #
 # Respects both:
 #   - User-provided filters (e.g., ?topic=123)
@@ -10,6 +11,9 @@
 module SparqlItemsCount
   include SparqlHttpHelper
   require 'cgi'
+  require 'digest'
+
+  CACHE_TTL = 10.minutes
 
   # Returns total count of items matching the filter
   #
@@ -18,38 +22,47 @@ module SparqlItemsCount
   # @return [Integer] Total count
   #
   def self.get_items_count(type_key, filter = "")
-  model_class = get_model_class(type_key)
-  item_type = model_class::SPARQL_TYPE
-  required_filter = build_required_filter_clause(model_class)
+    cache_key = "sparql/count/#{type_key}/#{Digest::MD5.hexdigest(filter.to_s)}"
 
-  query = <<~SPARQL
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    PREFIX dc-term: <http://purl.org/dc/terms/>
-    PREFIX parl: <http://data.parliament.uk/schema/parl#>
-    SELECT (COUNT(DISTINCT ?item) AS ?total)
-    WHERE {
-      ?item a #{item_type} .
-      #{required_filter}#{filter}
-    }
-  SPARQL
-  
-  # Pass the raw query, not URL-encoded body
-  response = SparqlHttpHelper.execute_sparql_post(
-    $SPARQL_REQUEST_URI,
-    query,
-    $SPARQL_COUNT_HEADERS
-  )
-  
-  unless response.is_a?(Net::HTTPSuccess)
-    Rails.logger.error("SPARQL count request failed: #{response.code} #{response.body}")
-    return 0
+    Rails.cache.fetch(cache_key, expires_in: CACHE_TTL) do
+      fetch_count_from_sparql(type_key, filter)
+    end
   end
-  
-  data = JSON.parse(response.body)
-  data["results"]["bindings"][0]["total"]["value"].to_i
-end
 
   private
+
+  def self.fetch_count_from_sparql(type_key, filter)
+    model_class = get_model_class(type_key)
+    item_type = model_class::SPARQL_TYPE
+    required_filter = build_required_filter_clause(model_class)
+
+    query = <<~SPARQL
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      PREFIX dc-term: <http://purl.org/dc/terms/>
+      PREFIX parl: <http://data.parliament.uk/schema/parl#>
+      SELECT (COUNT(DISTINCT ?item) AS ?total)
+      WHERE {
+        ?item a #{item_type} .
+        #{required_filter}#{filter}
+      }
+    SPARQL
+
+    Rails.logger.debug { "[SPARQL] Count query for #{type_key} (cache miss)" }
+
+    response = SparqlHttpHelper.execute_sparql_post(
+      $SPARQL_REQUEST_URI,
+      query,
+      $SPARQL_COUNT_HEADERS
+    )
+
+    unless response.is_a?(Net::HTTPSuccess)
+      Rails.logger.error("SPARQL count request failed: #{response.code} #{response.body}")
+      return 0
+    end
+
+    data = JSON.parse(response.body)
+    data["results"]["bindings"][0]["total"]["value"].to_i
+  end
 
   def self.get_model_class(type_key)
     model_class = type_key.to_s.classify.constantize

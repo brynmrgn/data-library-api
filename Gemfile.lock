@@ -202,7 +202,6 @@ GEM
     parser (3.3.8.0)
       ast (~> 2.4.1)
       racc
-    pg (1.5.9)
     pp (0.6.2)
       prettyprint
     prettyprint (0.2.0)
@@ -378,7 +377,6 @@ DEPENDENCIES
   kamal
   mocha
   pagy
-  pg (~> 1.1)
   propshaft
   puma (>= 5.0)
   rails (~> 8.0.2)

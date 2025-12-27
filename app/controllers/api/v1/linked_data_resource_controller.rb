@@ -15,6 +15,10 @@
 #   order     - Sort direction: 'asc' or 'desc'
 #   <term>    - Filter by taxonomy term (e.g., ?topic=12345)
 #
+# Caching:
+#   - HTTP Cache-Control headers set for CDN/browser caching
+#   - Internal Rails.cache used for SPARQL query results
+#
 module Api
   module V1
     class LinkedDataResourceController < BaseController
@@ -26,6 +30,8 @@ module Api
       # Returns a paginated list of items, optionally filtered by taxonomy terms
       #
       def index
+        # HTTP caching - allows CDNs and browsers to cache responses
+        expires_in 5.minutes, public: true
         # Build filter clause
         filter = SparqlFilterBuilder.new(@model_class, params).build
 
@@ -73,6 +79,9 @@ module Api
       # Returns detailed information for a single item
       #
       def show
+        # HTTP caching - allows CDNs and browsers to cache responses
+        expires_in 15.minutes, public: true
+
         result = SparqlGetObject.get_item(@type_key, params[:id])
 
         unless result[:item]

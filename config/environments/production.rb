@@ -46,9 +46,6 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
-  # Replace the default in-process memory cache store with a durable alternative.
-  config.cache_store = :memory_store
-
   # Replace the default in-process and non-durable queuing backend for Active Job.
   config.active_job.queue_adapter = :async
   #config.solid_queue.connects_to = { database: { writing: :queue } }
@@ -90,7 +87,8 @@ Rails.application.configure do
 
   config.serve_static_assets = true
 
-  # Only use SolidCache if we're not precompiling assets
-  config.cache_store = :memory_store
+  # Memory store for SPARQL query result caching
+  # 64MB limit - entries auto-evicted when full (LRU)
+  config.cache_store = :memory_store, { size: 64.megabytes }
 
 end
