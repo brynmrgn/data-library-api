@@ -1,6 +1,6 @@
 require 'open-uri'
 
-class ApplicationController < ActionController::Base
+class ApplicationController < ActionController::API
   include Pagy::Backend
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   $SPARQL_REQUEST_URI = URI(
@@ -14,7 +14,7 @@ class ApplicationController < ActionController::Base
   $CSV_DATE_DISPLAY_FORMAT = '%-d/%m/%Y'
   $DEFAULT_RESULTS_PER_PAGE = 20
   $MAX_RESULTS_PER_PAGE = 250
-  allow_browser versions: :modern
+  #allow_browser versions: :modern
 
   
   before_action do
