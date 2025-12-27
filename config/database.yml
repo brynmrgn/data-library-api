@@ -1,7 +1,10 @@
-# No database required - API is stateless (uses SPARQL endpoint)
-# Using nulldb adapter to satisfy Rails requirements without a real database
+# Database configuration
+# Note: This API is stateless and doesn't use a database for business logic.
+# The Heroku Postgres addon is provisioned but not actively used.
 
 default: &default
+  adapter: postgresql
+  encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
 development:
@@ -16,4 +19,4 @@ test:
 
 production:
   <<: *default
-  adapter: nulldb
+  url: <%= ENV['DATABASE_URL'] %>
