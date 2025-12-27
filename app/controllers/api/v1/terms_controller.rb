@@ -1,11 +1,16 @@
 # app/controllers/api/v1/terms_controller.rb
-require 'net/http'
-require 'json'
-
+#
+# Controller for parliamentary thesaurus terms (SES concepts).
+# Terms are used for filtering resources by topic, subject, publisher, etc.
+#
 module Api
   module V1
-    class TermsController < ApplicationController
-      SPARQL_ENDPOINT = 'https://data-odp.parliament.uk/sparql'.freeze
+    class TermsController < BaseController
+      # Headers for SPARQL SELECT queries (not CONSTRUCT)
+      SPARQL_SELECT_HEADERS = {
+        'Content-Type' => 'application/sparql-query',
+        'Accept' => 'application/sparql-results+json'
+      }.freeze
 
       # Cache the total count (it rarely changes)
       TERMS_COUNT_CACHE_KEY = 'terms_total_count'.freeze
@@ -43,7 +48,7 @@ module Api
         end
 
         query = Term.index_query(limit: per_page, offset: offset)
-        response = sparql_request(query)
+        response = sparql_select_request(query)
         bindings = response&.dig('results', 'bindings') || []
 
         items = bindings.map do |binding|
@@ -68,7 +73,7 @@ module Api
       end
 
       def fetch_terms_count
-        response = sparql_request(Term::COUNT_QUERY)
+        response = sparql_select_request(Term::COUNT_QUERY)
         response&.dig('results', 'bindings', 0, 'count', 'value').to_i
       rescue
         nil
@@ -76,7 +81,7 @@ module Api
 
       def fetch_term(term_id)
         query = Term.show_query(term_id)
-        response = sparql_request(query)
+        response = sparql_select_request(query)
         return nil unless response
 
         bindings = response.dig('results', 'bindings')
@@ -112,26 +117,19 @@ module Api
         end
       end
 
-      def sparql_request(query)
-        uri = URI(SPARQL_ENDPOINT)
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-        http.verify_callback = ->(_preverify_ok, _store_ctx) { true }
-        http.open_timeout = 5
-        http.read_timeout = 30
-
-        request = Net::HTTP::Post.new(uri)
-        request['Content-Type'] = 'application/sparql-query'
-        request['Accept'] = 'application/sparql-results+json'
-        request.body = query
-
-        response = http.request(request)
+      # Execute a SPARQL SELECT query (returns JSON results, not RDF)
+      #
+      def sparql_select_request(query)
+        response = SparqlHttpHelper.execute_sparql_post(
+          $SPARQL_REQUEST_URI,
+          query,
+          SPARQL_SELECT_HEADERS
+        )
         return nil unless response.is_a?(Net::HTTPSuccess)
 
         JSON.parse(response.body)
       rescue StandardError => e
-        Rails.logger.error "SPARQL request failed: #{e.message}"
+        Rails.logger.error "[SPARQL] Terms request failed: #{e.message}"
         nil
       end
     end

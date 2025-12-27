@@ -1,8 +1,22 @@
-# app/models/concerns/sparql_items_count.rb
+# app/services/sparql_items_count.rb
+#
+# Gets total item count for pagination.
+# Executes a COUNT query against the SPARQL endpoint.
+#
+# Respects both:
+#   - User-provided filters (e.g., ?topic=123)
+#   - Model's REQUIRED_FILTER (e.g., status = published)
+#
 module SparqlItemsCount
   include SparqlHttpHelper
   require 'cgi'
 
+  # Returns total count of items matching the filter
+  #
+  # @param type_key [Symbol] Resource type (e.g., :research_briefing)
+  # @param filter [String] Optional SPARQL filter clause
+  # @return [Integer] Total count
+  #
   def self.get_items_count(type_key, filter = "")
   model_class = get_model_class(type_key)
   item_type = model_class::SPARQL_TYPE
