@@ -3,11 +3,20 @@ source "https://rubygems.org"
 ruby "3.4.4"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.0.2"
+# gem "rails", "~> 8.0.2"
+# Add individual Rails components instead:
+gem 'actionpack', '~> 8.0.2'
+gem 'actionview', '~> 8.0.2'
+gem 'actionmailer', '~> 8.0.2'
+gem 'activejob', '~> 8.0.2'
+gem 'activemodel', '~> 8.0.2'
+gem 'actioncable', '~> 8.0.2'
+gem 'activesupport', '~> 8.0.2'
+gem 'railties', '~> 8.0.2'
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # PostgreSQL gem required by Heroku buildpack, though API doesn't use a database
-gem "pg", "~> 1.1"
+#gem "pg", "~> 1.1"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
@@ -44,8 +53,7 @@ gem "thruster", require: false
 
 gem "csv"
 gem "json-ld"
-gem 'pagy'
-
+gem 'pagy', '~> 9.3'
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -70,6 +78,6 @@ group :test do
   gem 'mocha'
 end
 
-gem "sqlite3", ">= 2.1"
-gem 'activerecord-nulldb-adapter'
+#gem "sqlite3", ">= 2.1"
+#gem 'activerecord-nulldb-adapter'
 
