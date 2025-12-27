@@ -3,7 +3,6 @@
 # Run: rake generate:models
 
 class ResearchBriefing < LinkedDataResource
-
   SPARQL_TYPE = '<http://data.parliament.uk/schema/parl#ResearchBriefing>'.freeze
   SORT_BY = :date
 
