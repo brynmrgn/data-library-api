@@ -1,7 +1,17 @@
 # app/services/sparql_filter_builder.rb
 #
-# Service responsible for building SPARQL filter clauses based on request parameters
-# Supports multiple filter parameters (e.g., ?topic=123&publisher=456)
+# Builds SPARQL FILTER clauses from request parameters.
+# Allows filtering resources by taxonomy terms (topic, subject, publisher, etc.)
+#
+# @example Filter by topic
+#   GET /research-briefings?topic=12345
+#   # Generates: ?item parl:topic ?12345_term . FILTER(?12345_term IN (<http://...>))
+#
+# @example Filter by multiple terms
+#   GET /research-briefings?topic=123&publisher=456
+#   # Generates both filter clauses, combined with AND
+#
+# Uses model's TERM_TYPE_MAPPINGS to know which predicate to use for each filter type.
 #
 class SparqlFilterBuilder
   def initialize(model_class, params)

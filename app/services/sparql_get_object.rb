@@ -1,21 +1,34 @@
 # app/services/sparql_get_object.rb
+#
+# Fetches linked data resources from SPARQL endpoint
+# Handles both list (index) and single item (show) requests
+#
 class SparqlGetObject
-  # Returns { items: [...], query: "..." }
+  # Fetches paginated list of items
+  #
+  # @param type_key [Symbol] Resource type (e.g., :research_briefing)
+  # @param filter [String] SPARQL filter clause
+  # @param limit [Integer] Number of items to fetch
+  # @param offset [Integer] Pagination offset
+  # @param all_fields [Boolean] Whether to fetch all fields or just index fields
+  # @param sort_field [Symbol] Field to sort by
+  # @param sort_order [Symbol] Sort direction (:asc or :desc)
+  # @return [Hash] { items: [...], query: "..." }
+  #
   def self.get_items(type_key, filter, limit:, offset:, all_fields: false, sort_field: nil, sort_order: nil)
     model_class = get_model_class(type_key)
 
-    query = SparqlQueryService.build_query(
+    query = SparqlQueryBuilder.list_query(
       model_class,
       filter,
-      limit,
-      offset,
+      limit: limit,
+      offset: offset,
       all_fields: all_fields,
       sort_field: sort_field,
       sort_order: sort_order
     )
 
-    puts "[SPARQL get_items] #{model_class.name}"
-    puts "[SPARQL get_items] Query:\n#{query}"
+    Rails.logger.debug { "[SPARQL] get_items for #{model_class.name}" }
 
     response = SparqlHttpHelper.execute_sparql_post(
       $SPARQL_REQUEST_URI,
@@ -25,6 +38,7 @@ class SparqlGetObject
     )
 
     unless response.is_a?(Net::HTTPSuccess)
+      Rails.logger.error { "[SPARQL] get_items failed: #{response.code}" }
       return { items: [], query: query }
     end
 
@@ -33,7 +47,12 @@ class SparqlGetObject
     { items: instantiate_items(results, type_key), query: query }
   end
 
-  # Returns { item: ..., query: "..." }
+  # Fetches a single item by ID
+  #
+  # @param type_key [Symbol] Resource type
+  # @param id [String] Item ID
+  # @return [Hash] { item: <LinkedDataResource>, query: "..." }
+  #
   def self.get_item(type_key, id)
     model_class = get_model_class(type_key)
 
@@ -42,8 +61,7 @@ class SparqlGetObject
 
     query = SparqlQueryBuilder.show_query(model_class, filter)
 
-    puts "[SPARQL get_item] #{model_class.name} id=#{id}, uri=#{item_uri}"
-    puts "[SPARQL get_item] Query:\n#{query}"
+    Rails.logger.debug { "[SPARQL] get_item for #{model_class.name} id=#{id}" }
 
     response = SparqlHttpHelper.execute_sparql_post(
       $SPARQL_REQUEST_URI,
@@ -52,14 +70,10 @@ class SparqlGetObject
       model_class
     )
 
-    puts "[SPARQL get_item] HTTP #{response.code} for #{model_class.name} id=#{id}"
-
     unless response.is_a?(Net::HTTPSuccess)
-      puts "[SPARQL get_item] ERROR #{response.code} #{response.body}"
+      Rails.logger.error { "[SPARQL] get_item failed: #{response.code} #{response.body}" }
       return { item: nil, query: query }
     end
-
-    puts "[SPARQL get_item] Raw response body (truncated): #{response.body[0..1000]}"
 
     results = JSON.parse(response.body)
 
@@ -68,36 +82,30 @@ class SparqlGetObject
 
     items = instantiate_items(results, type_key)
 
-    puts "[SPARQL get_item] Instantiated #{items.length} items for #{model_class.name} id=#{id}"
-
     { item: items.first, query: query }
   end
 
   private
 
+  # Converts JSON-LD graph results into model instances
+  #
   def self.instantiate_items(results, type_key)
     model_class = get_model_class(type_key)
-
     items_array = results['@graph'] || []
 
-    items_array.map do |result|
-      item_uri = result['@id']
+    items_array.filter_map do |result|
+      next unless result['@id']
 
-      unless item_uri
-        next
-      end
-
-      id = item_uri.split('/').last
-
-      item = model_class.new(
-        id: id,
+      model_class.new(
+        id: result['@id'].split('/').last,
         data: result,
         resource_type: type_key
       )
-      item
-    end.compact.tap { |items| puts "instantiate_items: Returning #{items.length} items" }
+    end
   end
 
+  # Resolves type_key to model class
+  #
   def self.get_model_class(type_key)
     class_name = type_key.to_s.classify
     model_class = class_name.constantize

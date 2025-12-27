@@ -1,10 +1,15 @@
 # app/services/json_formatter_service.rb
 #
-# Service responsible for formatting LinkedDataResource objects into JSON responses
-# Uses model's ATTRIBUTES configuration to determine how to format each field
+# Formats LinkedDataResource objects into clean JSON API responses.
+# Transforms JSON-LD data into a simplified structure based on model ATTRIBUTES.
+#
+# Features:
+#   - Unwraps JSON-LD @value structures
+#   - Extracts nested object properties (topics, authors, etc.)
+#   - Sorts nested items (terms alphabetically, sub-objects by position)
+#   - Supports index (summary) and show (full) views
 #
 class JsonFormatterService
-  
   # Formats a single item with specified attributes
   # @param item [LinkedDataResource] The item to format
   # @param attributes_to_include [Array<Symbol>] Which attributes to include (defaults to all)
@@ -25,7 +30,6 @@ def self.format_item(item, attributes_to_include: nil, include_base_fields: true
   # Add each requested attribute
   attributes_to_include.each do |attr_name|
     value = item.send(attr_name)
-    puts "🔧 #{attr_name} = #{value.inspect[0..50]}" if value.nil?
     next if value.nil?
     
     config = model_attributes[attr_name]

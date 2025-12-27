@@ -1,7 +1,19 @@
 # app/controllers/api/v1/linked_data_resource_controller.rb
 #
-# LinkedDataResourceController handles list (index) and detail (show) views for all
-# linked data resource types, delegating formatting and filtering to services
+# Generic controller for all linked data resource types.
+# Routes are configured dynamically based on RESOURCE_CONFIG (see config/routes.rb).
+#
+# Endpoints:
+#   GET /api/v1/:resource_type          - Paginated list with filtering and sorting
+#   GET /api/v1/:resource_type/:id      - Single item detail
+#
+# Query parameters:
+#   page      - Page number (default: 1)
+#   per_page  - Items per page (default: 20, max: 250)
+#   fields    - Use 'all' for complete data, otherwise index fields only
+#   sort      - Field to sort by (must be in model's SORTABLE_FIELDS)
+#   order     - Sort direction: 'asc' or 'desc'
+#   <term>    - Filter by taxonomy term (e.g., ?topic=12345)
 #
 module Api
   module V1

@@ -1,4 +1,13 @@
 # app/services/sparql_http_helper.rb
+#
+# HTTP helper for executing SPARQL queries against the Parliament endpoint.
+# Handles SSL configuration, JSON-LD framing, and response processing.
+#
+# Used by:
+#   - SparqlGetObject for resource queries (CONSTRUCT + framing)
+#   - SparqlItemsCount for count queries (SELECT)
+#   - TermsController for term queries (SELECT)
+#
 require 'uri'
 require 'net/http'
 require 'json'
@@ -12,6 +21,14 @@ module SparqlHttpHelper
     SparqlHttpHelper.execute_sparql_post(uri, body, headers, model_class)
   end
 
+  # Executes a SPARQL query via HTTP POST
+  #
+  # @param uri [String] SPARQL endpoint URL
+  # @param query [String] SPARQL query string
+  # @param headers [Hash] HTTP headers (Accept determines response format)
+  # @param model_class [Class] Optional model class for JSON-LD framing
+  # @return [Net::HTTPResponse] HTTP response (body may be framed JSON-LD)
+  #
   def self.execute_sparql_post(uri, query, headers, model_class = nil)
     uri = URI(uri)
     http = Net::HTTP.new(uri.host, uri.port)
@@ -45,7 +62,7 @@ module SparqlHttpHelper
     require 'json/ld'
 
     response_body_text = response.body
-    puts "Response body: #{response_body_text[0..500]}"  # First 500 chars
+    Rails.logger.debug { "[SPARQL] Response body: #{response_body_text[0..500]}" }
 
     if response_body_text.include?('Query interrupted')
       raise "SPARQL query timed out or failed: #{response_body_text}"
@@ -59,18 +76,5 @@ module SparqlHttpHelper
 
     response.define_singleton_method(:body) { framed_data.to_json }
     response
-  end
-
-  def get_sparql_response(request_body, frame)
-    # We add the SPARQL query request body to the array of queries.
-    @queries ||= []
-    @queries << request_body
-    
-    response = sparql_post($SPARQL_REQUEST_URI, request_body, $SPARQL_REQUEST_HEADERS)
-    data = JSON.parse(response.body)
-    frame = JSON.parse(frame)
-    data2 = JSON::LD::API.frame(data, frame)
-
-    data2
   end
 end
