@@ -33,7 +33,9 @@ def self.format_item(item, attributes_to_include: nil, include_base_fields: true
     if config.is_a?(Hash) && config[:properties]
       # Nested attribute - always return as array for consistency
       value = [value] unless value.is_a?(Array)
-      result[attr_name] = value.map { |v| extract_nested_properties(v, config[:properties]) }
+      formatted = value.map { |v| extract_nested_properties(v, config[:properties]) }
+      # Sort by numeric suffix in ID (e.g., .../authors/1, .../authors/2)
+      result[attr_name] = formatted.sort_by { |v| v[:id].to_s[/\d+$/].to_i }
     else
       # Simple value
       result[attr_name] = format_simple_value(value)

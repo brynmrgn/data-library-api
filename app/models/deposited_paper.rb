@@ -3,7 +3,6 @@
 # Run: rake generate:models
 
 class DepositedPaper < LinkedDataResource
-
   SPARQL_TYPE = '<http://data.parliament.uk/schema/parl#DepositedPaper>'.freeze
   SORT_BY = :dateReceived
 
