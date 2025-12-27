@@ -7,6 +7,7 @@ class DepositedPaper < LinkedDataResource
   DEFAULT_SORT_FIELD = :dateReceived
   DEFAULT_SORT_ORDER = :desc
   SORTABLE_FIELDS = [:dateReceived, :title, :identifier, :lastModified].freeze
+  REQUIRED_FILTER = nil
 
   ATTRIBUTES = {
   :title => "dc-term:title",

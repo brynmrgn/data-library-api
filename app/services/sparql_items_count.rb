@@ -6,6 +6,7 @@ module SparqlItemsCount
   def self.get_items_count(type_key, filter = "")
   model_class = get_model_class(type_key)
   item_type = model_class::SPARQL_TYPE
+  required_filter = build_required_filter_clause(model_class)
 
   query = <<~SPARQL
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -14,7 +15,7 @@ module SparqlItemsCount
     SELECT (COUNT(DISTINCT ?item) AS ?total)
     WHERE {
       ?item a #{item_type} .
-      #{filter}
+      #{required_filter}#{filter}
     }
   SPARQL
   
@@ -40,5 +41,21 @@ end
     model_class = type_key.to_s.classify.constantize
     raise ArgumentError, "Unknown type: #{type_key}" unless model_class < LinkedDataResource
     model_class
+  end
+
+  # Builds SPARQL filter clause from model's REQUIRED_FILTER constant
+  # Returns empty string if no required filter defined
+  #
+  def self.build_required_filter_clause(model_class)
+    return '' unless model_class.const_defined?(:REQUIRED_FILTER) && model_class::REQUIRED_FILTER
+
+    filter_config = model_class::REQUIRED_FILTER
+    predicate = filter_config[:predicate]
+    value = filter_config[:value].to_s.downcase
+
+    <<~SPARQL
+      ?item #{predicate} ?_rf_value .
+      FILTER(LCASE(STR(?_rf_value)) = "#{value}")
+    SPARQL
   end
 end
