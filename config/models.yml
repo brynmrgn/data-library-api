@@ -12,6 +12,11 @@ research-briefings:
     - title
     - identifier
 
+  # Only show published items (case-insensitive match)
+  required_filter:
+    predicate: parl:status
+    value: published
+
   attributes:
     # Simple properties
     title: dc-term:title

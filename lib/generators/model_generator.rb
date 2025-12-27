@@ -80,6 +80,7 @@ class ModelGenerator
         DEFAULT_SORT_FIELD = :#{config['sort_by']}
         DEFAULT_SORT_ORDER = :#{config['sort_order'] || 'desc'}
         SORTABLE_FIELDS = #{(config['sortable_fields'] || [config['sort_by']]).map(&:to_sym).inspect}.freeze
+        REQUIRED_FILTER = #{config['required_filter'] ? format_hash(config['required_filter'].transform_keys(&:to_sym)) : 'nil'}
 
         ATTRIBUTES = #{format_hash(attributes)}.freeze
 
@@ -158,6 +159,7 @@ class ModelGenerator
   def self.generate_list_query(config, attrs_to_include, all_attributes)
     sparql_type = "<#{config['sparql_type']}>"
     required_attrs = config['required_attributes'].map(&:to_sym)
+    required_filter_clause = build_required_filter_clause(config['required_filter'])
 
     construct_clause = build_construct_clause(attrs_to_include, all_attributes)
     where_clause = build_where_clause(attrs_to_include, all_attributes, required_attrs)
@@ -180,7 +182,7 @@ class ModelGenerator
             ?item a #{sparql_type} ;
               #{required_where.gsub(/\.$/, '')} ;
               {{SORT_BINDING}} .
-            {{FILTER}}
+            #{required_filter_clause}{{FILTER}}
           }
           ORDER BY {{SORT_DIRECTION}}(?sortValue)
           OFFSET {{OFFSET}}
@@ -193,6 +195,7 @@ class ModelGenerator
   def self.generate_show_query(config, attributes)
     sparql_type = "<#{config['sparql_type']}>"
     required_attrs = config['required_attributes'].map(&:to_sym)
+    required_filter_clause = build_required_filter_clause(config['required_filter'])
 
     construct_clause = build_construct_clause(attributes.keys, attributes)
     where_clause = build_where_clause(attributes.keys, attributes, required_attrs)
@@ -208,7 +211,7 @@ class ModelGenerator
         ?item a #{sparql_type} .
         #{required_where_optional}
       #{where_clause}
-        {{FILTER}}
+        #{required_filter_clause}{{FILTER}}
       }
     SPARQL
   end
@@ -307,6 +310,22 @@ class ModelGenerator
   def self.get_uri(attr_config)
     return nil unless attr_config
     attr_config.is_a?(Hash) ? attr_config[:uri] : attr_config
+  end
+
+  # Builds a SPARQL filter clause for required_filter config
+  # Returns empty string if no required_filter defined
+  # Generates case-insensitive string matching
+  #
+  def self.build_required_filter_clause(filter_config)
+    return '' unless filter_config
+
+    predicate = filter_config['predicate']
+    value = filter_config['value'].to_s.downcase
+
+    <<~SPARQL
+      ?item #{predicate} ?_rf_value .
+            FILTER(LCASE(STR(?_rf_value)) = "#{value}")
+    SPARQL
   end
 
   def self.format_hash(hash, indent_level = 0)

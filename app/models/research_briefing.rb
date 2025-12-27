@@ -7,6 +7,10 @@ class ResearchBriefing < LinkedDataResource
   DEFAULT_SORT_FIELD = :date
   DEFAULT_SORT_ORDER = :desc
   SORTABLE_FIELDS = [:date, :title, :identifier].freeze
+  REQUIRED_FILTER = {
+  :predicate => "parl:status",
+  :value => "published"
+}
 
   ATTRIBUTES = {
   :title => "dc-term:title",
@@ -155,7 +159,9 @@ class ResearchBriefing < LinkedDataResource
             dc-term:title ?title ;
               dc-term:identifier ?identifier  ;
             {{SORT_BINDING}} .
-          {{FILTER}}
+          ?item parl:status ?_rf_value .
+          FILTER(LCASE(STR(?_rf_value)) = "published")
+    {{FILTER}}
         }
         ORDER BY {{SORT_DIRECTION}}(?sortValue)
         OFFSET {{OFFSET}}
@@ -270,7 +276,9 @@ class ResearchBriefing < LinkedDataResource
             dc-term:title ?title ;
               dc-term:identifier ?identifier  ;
             {{SORT_BINDING}} .
-          {{FILTER}}
+          ?item parl:status ?_rf_value .
+          FILTER(LCASE(STR(?_rf_value)) = "published")
+    {{FILTER}}
         }
         ORDER BY {{SORT_DIRECTION}}(?sortValue)
         OFFSET {{OFFSET}}
@@ -378,7 +386,9 @@ class ResearchBriefing < LinkedDataResource
           ?attachment dc-term:title ?attachment_title .
           ?attachment nfo:fileUrl ?attachment_file_url .
         }
-      {{FILTER}}
+      ?item parl:status ?_rf_value .
+          FILTER(LCASE(STR(?_rf_value)) = "published")
+    {{FILTER}}
     }
   SPARQL
 
