@@ -1,10 +1,18 @@
 # app/services/sparql_get_object.rb
 class SparqlGetObject
   # Returns { items: [...], query: "..." }
-  def self.get_items(type_key, filter, limit:, offset:, all_fields: false)
+  def self.get_items(type_key, filter, limit:, offset:, all_fields: false, sort_field: nil, sort_order: nil)
     model_class = get_model_class(type_key)
 
-    query = SparqlQueryService.build_query(model_class, filter, limit, offset, all_fields: all_fields)
+    query = SparqlQueryService.build_query(
+      model_class,
+      filter,
+      limit,
+      offset,
+      all_fields: all_fields,
+      sort_field: sort_field,
+      sort_order: sort_order
+    )
 
     puts "[SPARQL get_items] #{model_class.name}"
     puts "[SPARQL get_items] Query:\n#{query}"

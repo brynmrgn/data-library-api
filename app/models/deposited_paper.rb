@@ -4,7 +4,9 @@
 
 class DepositedPaper < LinkedDataResource
   SPARQL_TYPE = '<http://data.parliament.uk/schema/parl#DepositedPaper>'.freeze
-  SORT_BY = :dateReceived
+  DEFAULT_SORT_FIELD = :dateReceived
+  DEFAULT_SORT_ORDER = :desc
+  SORTABLE_FIELDS = [:dateReceived, :title, :identifier, :lastModified].freeze
 
   ATTRIBUTES = {
   :title => "dc-term:title",
@@ -116,10 +118,10 @@ class DepositedPaper < LinkedDataResource
             dc-term:abstract ?abstract ;
               dc-term:identifier ?identifier ;
               parl:dateReceived ?dateReceived  ;
-            parl:dateReceived ?sortValue .
+            {{SORT_BINDING}} .
           {{FILTER}}
         }
-        ORDER BY DESC(?sortValue)
+        ORDER BY {{SORT_DIRECTION}}(?sortValue)
         OFFSET {{OFFSET}}
         LIMIT {{LIMIT}}
       }
@@ -202,10 +204,10 @@ class DepositedPaper < LinkedDataResource
             dc-term:abstract ?abstract ;
               dc-term:identifier ?identifier ;
               parl:dateReceived ?dateReceived  ;
-            parl:dateReceived ?sortValue .
+            {{SORT_BINDING}} .
           {{FILTER}}
         }
-        ORDER BY DESC(?sortValue)
+        ORDER BY {{SORT_DIRECTION}}(?sortValue)
         OFFSET {{OFFSET}}
         LIMIT {{LIMIT}}
       }

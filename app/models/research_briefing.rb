@@ -4,7 +4,9 @@
 
 class ResearchBriefing < LinkedDataResource
   SPARQL_TYPE = '<http://data.parliament.uk/schema/parl#ResearchBriefing>'.freeze
-  SORT_BY = :date
+  DEFAULT_SORT_FIELD = :date
+  DEFAULT_SORT_ORDER = :desc
+  SORTABLE_FIELDS = [:date, :title, :identifier].freeze
 
   ATTRIBUTES = {
   :title => "dc-term:title",
@@ -152,10 +154,10 @@ class ResearchBriefing < LinkedDataResource
           ?item a <http://data.parliament.uk/schema/parl#ResearchBriefing> ;
             dc-term:title ?title ;
               dc-term:identifier ?identifier  ;
-            dc-term:date ?sortValue .
+            {{SORT_BINDING}} .
           {{FILTER}}
         }
-        ORDER BY DESC(?sortValue)
+        ORDER BY {{SORT_DIRECTION}}(?sortValue)
         OFFSET {{OFFSET}}
         LIMIT {{LIMIT}}
       }
@@ -267,10 +269,10 @@ class ResearchBriefing < LinkedDataResource
           ?item a <http://data.parliament.uk/schema/parl#ResearchBriefing> ;
             dc-term:title ?title ;
               dc-term:identifier ?identifier  ;
-            dc-term:date ?sortValue .
+            {{SORT_BINDING}} .
           {{FILTER}}
         }
-        ORDER BY DESC(?sortValue)
+        ORDER BY {{SORT_DIRECTION}}(?sortValue)
         OFFSET {{OFFSET}}
         LIMIT {{LIMIT}}
       }
