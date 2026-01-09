@@ -2,6 +2,7 @@
 #
 # Base controller for API endpoints.
 # Disables CSRF protection for API access.
+# Wrap in modules to support versioning.
 #
 module Api
   module V1

@@ -66,11 +66,11 @@ module Api
               field: (sort_field || @model_class::DEFAULT_SORT_FIELD).to_s,
               order: (sort_order || @model_class::DEFAULT_SORT_ORDER).to_s,
               sortable_fields: @model_class::SORTABLE_FIELDS.map(&:to_s)
-            }
+            },
+            query: result[:query]
           ),
           links: build_pagination_links,
-          items: JsonFormatterService.format_items_for_index(@items, all_fields: all_fields),
-          queries: [result[:query]]
+          items: JsonFormatterService.format_items_for_index(@items, all_fields: all_fields)
         }
       rescue ArgumentError => e
         render plain: e.message, status: :not_found
@@ -88,7 +88,9 @@ module Api
           render plain: 'Item not found', status: :not_found and return
         end
 
-        render json: JsonFormatterService.format_item_for_show(result[:item]).merge(queries: [result[:query]])
+        response = JsonFormatterService.format_item_for_show(result[:item])
+        response[:meta][:query] = result[:query]
+        render json: response
       end
 
       private

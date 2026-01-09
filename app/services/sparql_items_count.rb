@@ -13,7 +13,7 @@ module SparqlItemsCount
   require 'cgi'
   require 'digest'
 
-  CACHE_TTL = 10.minutes
+  CACHE_TTL = 5.minutes
 
   # Returns total count of items matching the filter
   #
