@@ -4,7 +4,7 @@ class ApplicationController < ActionController::API
   include Pagy::Backend
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   $SPARQL_REQUEST_URI = URI(
-    ENV.fetch('SPARQL_ENDPOINT', 'https://apimgmt-odp-prod-api-uksouth.azure-api.net/sparql')
+    ENV.fetch('SPARQL_ENDPOINT', 'https://data-odp.parliament.uk/sparql')
   )
 
   $SPARQL_REQUEST_HEADERS = { 'Content-Type': 'application/sparql-query', 'Accept': 'application/ld+json' }

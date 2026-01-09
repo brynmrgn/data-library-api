@@ -11,7 +11,7 @@
 #   {{SORT_DIRECTION}} - Sort direction (ASC or DESC)
 #
 class SparqlQueryBuilder
-  # Standard SPARQL prefixes used across all queries
+  # Standard SPARQL prefixes used across all resource-type queries
   PREFIXES_HASH = {
     "parl" => "http://data.parliament.uk/schema/parl#",
     "dc-term" => "http://purl.org/dc/terms/",
