@@ -53,7 +53,7 @@ gem "thruster", require: false
 
 gem "csv"
 gem "json-ld"
-gem 'pagy', '~> 9.3'
+gem 'pagy', '~> 43.2'
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
