@@ -5,14 +5,14 @@ ruby "3.4.8"
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 # gem "rails", "~> 8.0.2"
 # Add individual Rails components instead:
-gem 'actionpack', '~> 8.0.2'
-gem 'actionview', '~> 8.0.2'
-gem 'actionmailer', '~> 8.0.2'
-gem 'activejob', '~> 8.0.2'
-gem 'activemodel', '~> 8.0.2'
-gem 'actioncable', '~> 8.0.2'
-gem 'activesupport', '~> 8.0.2'
-gem 'railties', '~> 8.0.2'
+gem 'actionpack', '~> 8.1.2'
+gem 'actionview', '~> 8.1.2'
+gem 'actionmailer', '~> 8.1.2'
+gem 'activejob', '~> 8.1.2'
+gem 'activemodel', '~> 8.1.2'
+gem 'actioncable', '~> 8.1.2'
+gem 'activesupport', '~> 8.1.2'
+gem 'railties', '~> 8.1.2'
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # PostgreSQL gem required by Heroku buildpack, though API doesn't use a database
