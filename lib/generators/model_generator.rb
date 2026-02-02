@@ -1,10 +1,25 @@
 # lib/generators/model_generator.rb
-# Generates model files, SPARQL queries, and frames from config/models.yml
-
+#
+# Code generator that reads config/models.yml and produces:
+#   - A model class per resource type (app/models/<resource>.rb) containing
+#     SPARQL query templates, JSON-LD frame, attribute definitions, and constants
+#   - A shared route config file (config/resource_config.rb) mapping URL paths
+#     to model classes
+#
+# Usage:
+#   bin/rails generate:models
+#
+# Each generated model inherits from LinkedDataResource and includes:
+#   - LIST_QUERY / LIST_QUERY_ALL / SHOW_QUERY - SPARQL CONSTRUCT query templates
+#   - FRAME - JSON-LD frame for shaping responses
+#   - ATTRIBUTES - field name to RDF predicate mappings
+#   - TERM_TYPE_MAPPINGS - filterable taxonomy term configuration
+#
 require 'yaml'
 require 'fileutils'
 
 class ModelGenerator
+  # Standard SPARQL prefixes injected into every generated query
   PREFIXES_HASH = {
     "parl" => "http://data.parliament.uk/schema/parl#",
     "dc-term" => "http://purl.org/dc/terms/",
@@ -16,8 +31,12 @@ class ModelGenerator
     "foaf" => "http://xmlns.com/foaf/0.1/"
   }.freeze
 
+  # Pre-built PREFIX block for SPARQL queries
   PREFIXES = PREFIXES_HASH.map { |prefix, uri| "PREFIX #{prefix}: <#{uri}>" }.join("\n")
 
+  # Reads config/models.yml and generates all model files and the resource config.
+  # Overwrites existing generated files.
+  #
   def self.generate_all
     config_path = Rails.root.join('config', 'models.yml')
     config = YAML.load_file(config_path)
@@ -54,6 +73,12 @@ class ModelGenerator
     puts "Done! Generated #{config.keys.count} models."
   end
 
+  # Generates Ruby source code for a single model class
+  #
+  # @param key [String] The resource type key from models.yml (e.g., "research-briefings")
+  # @param config [Hash] The YAML configuration for this resource type
+  # @return [String] Ruby source code for the model file
+  #
   def self.generate_model(key, config)
     underscored_key = key.to_s.tr('-', '_')
     class_name = underscored_key.classify
@@ -112,6 +137,11 @@ class ModelGenerator
     RUBY
   end
 
+  # Generates the RESOURCE_CONFIG constant mapping URL paths to model classes
+  #
+  # @param config [Hash] Map of route paths to controller/model info
+  # @return [String] Ruby source code for config/resource_config.rb
+  #
   def self.generate_resource_config(config)
     <<~RUBY
       # config/resource_config.rb
@@ -124,6 +154,13 @@ class ModelGenerator
 
   private
 
+  # Converts YAML attribute config into a Ruby hash.
+  # Simple attributes become { name: "predicate" }.
+  # Nested attributes become { name: { uri: "predicate", properties: { ... } } }.
+  #
+  # @param attrs_config [Hash] Raw attributes from YAML
+  # @return [Hash] Parsed attributes with symbol keys
+  #
   def self.parse_attributes(attrs_config)
     result = {}
     attrs_config.each do |name, value|
@@ -139,6 +176,11 @@ class ModelGenerator
     result
   end
 
+  # Converts YAML term type mappings into a Ruby hash for filtering support
+  #
+  # @param mappings_config [Hash, nil] Raw term mappings from YAML
+  # @return [Hash] Parsed mappings with predicate, label, and optional nested config
+  #
   def self.parse_term_mappings(mappings_config)
     return {} unless mappings_config
 
@@ -156,6 +198,15 @@ class ModelGenerator
     result
   end
 
+  # Generates a SPARQL CONSTRUCT query for listing items with pagination and sorting.
+  # Uses a subquery pattern: the inner SELECT handles filtering, sorting, and pagination,
+  # while the outer CONSTRUCT fetches the requested attributes for matched items.
+  #
+  # @param config [Hash] Model YAML config (for sparql_type, required_filter, etc.)
+  # @param attrs_to_include [Array<Symbol>] Attributes to include in the CONSTRUCT
+  # @param all_attributes [Hash] Full attribute definitions for predicate lookups
+  # @return [String] SPARQL query with {{FILTER}}, {{OFFSET}}, {{LIMIT}} placeholders
+  #
   def self.generate_list_query(config, attrs_to_include, all_attributes)
     sparql_type = "<#{config['sparql_type']}>"
     required_attrs = config['required_attributes'].map(&:to_sym)
@@ -192,6 +243,13 @@ class ModelGenerator
     SPARQL
   end
 
+  # Generates a SPARQL CONSTRUCT query for fetching a single item.
+  # Includes all attributes (no pagination or sorting needed).
+  #
+  # @param config [Hash] Model YAML config
+  # @param attributes [Hash] Full attribute definitions
+  # @return [String] SPARQL query with {{FILTER}} placeholder
+  #
   def self.generate_show_query(config, attributes)
     sparql_type = "<#{config['sparql_type']}>"
     required_attrs = config['required_attributes'].map(&:to_sym)
@@ -216,6 +274,15 @@ class ModelGenerator
     SPARQL
   end
 
+  # Generates a JSON-LD frame for shaping SPARQL CONSTRUCT responses.
+  # The frame is built dynamically from the model's attributes.
+  # A single frame works for both list and show queries - missing
+  # attributes are simply omitted from the framed output.
+  #
+  # @param config [Hash] Model YAML config (for sparql_type)
+  # @param attributes [Hash] Attribute definitions
+  # @return [Hash] JSON-LD frame
+  #
   def self.generate_frame(config, attributes)
     frame = {
       "@context" => PREFIXES_HASH.dup,
@@ -231,6 +298,14 @@ class ModelGenerator
     frame
   end
 
+  # Builds the CONSTRUCT clause triples for the given attributes.
+  # Simple attributes produce a single triple; nested attributes produce
+  # additional triples for sub-properties.
+  #
+  # @param attrs_to_include [Array<Symbol>] Attributes to include
+  # @param all_attributes [Hash] Full attribute definitions
+  # @return [String] SPARQL CONSTRUCT clause body
+  #
   def self.build_construct_clause(attrs_to_include, all_attributes)
     main_triples = []
     nested_blocks = []
@@ -265,6 +340,15 @@ class ModelGenerator
     construct
   end
 
+  # Builds OPTIONAL WHERE clause patterns for non-required attributes.
+  # Required attributes are handled separately (in the subquery) so they
+  # are not wrapped in OPTIONAL here.
+  #
+  # @param attrs_to_include [Array<Symbol>] Attributes to include
+  # @param all_attributes [Hash] Full attribute definitions
+  # @param required_attrs [Array<Symbol>] Required attributes (excluded from OPTIONAL)
+  # @return [String] SPARQL WHERE clause with OPTIONAL blocks
+  #
   def self.build_where_clause(attrs_to_include, all_attributes, required_attrs)
     where_lines = []
 
@@ -292,6 +376,12 @@ class ModelGenerator
     where_lines.join("\n")
   end
 
+  # Builds non-optional WHERE triples for required attributes (used in subquery)
+  #
+  # @param required_attrs [Array<Symbol>] Required attribute names
+  # @param all_attributes [Hash] Full attribute definitions
+  # @return [String] Semicolon-joined triple patterns
+  #
   def self.build_required_where(required_attrs, all_attributes)
     lines = required_attrs.map do |attr_name|
       uri = get_uri(all_attributes[attr_name])
@@ -300,6 +390,14 @@ class ModelGenerator
     lines.join(" ;\n          ") + " ."
   end
 
+  # Builds OPTIONAL patterns for required attributes in the outer WHERE clause.
+  # These are OPTIONAL in the outer query because the inner subquery already
+  # ensures the item has these attributes.
+  #
+  # @param required_attrs [Array<Symbol>] Required attribute names
+  # @param all_attributes [Hash] Full attribute definitions
+  # @return [String] OPTIONAL blocks for required attributes
+  #
   def self.build_required_where_optional(required_attrs, all_attributes)
     required_attrs.map do |attr_name|
       uri = get_uri(all_attributes[attr_name])
@@ -307,6 +405,11 @@ class ModelGenerator
     end.join("\n    ")
   end
 
+  # Extracts the RDF predicate URI from an attribute config
+  #
+  # @param attr_config [String, Hash, nil] Simple predicate string or nested config hash
+  # @return [String, nil] The predicate URI
+  #
   def self.get_uri(attr_config)
     return nil unless attr_config
     attr_config.is_a?(Hash) ? attr_config[:uri] : attr_config
@@ -328,6 +431,12 @@ class ModelGenerator
     SPARQL
   end
 
+  # Formats a Ruby hash as pretty-printed source code for embedding in generated files
+  #
+  # @param hash [Hash] The hash to format
+  # @param indent_level [Integer] Current indentation depth
+  # @return [String] Ruby hash literal as source code
+  #
   def self.format_hash(hash, indent_level = 0)
     return '{}' if hash.nil? || hash.empty?
 
@@ -343,6 +452,12 @@ class ModelGenerator
     "{\n#{lines.join(",\n")}\n#{indent}}"
   end
 
+  # Formats a single value as Ruby source code
+  #
+  # @param value [Object] The value to format
+  # @param indent_level [Integer] Current indentation depth (for nested hashes)
+  # @return [String] Ruby literal as source code
+  #
   def self.format_value(value, indent_level)
     case value
     when Hash
@@ -360,6 +475,12 @@ class ModelGenerator
     end
   end
 
+  # Indents each line of text by the given number of spaces
+  #
+  # @param text [String] Multi-line text to indent
+  # @param spaces [Integer] Number of spaces to prepend to each line
+  # @return [String] Indented text
+  #
   def self.indent(text, spaces)
     text.lines.map { |line| (' ' * spaces) + line }.join
   end

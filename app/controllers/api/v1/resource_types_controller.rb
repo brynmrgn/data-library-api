@@ -1,7 +1,18 @@
 # app/controllers/api/v1/resource_types_controller.rb
+#
+# Provides self-documenting endpoints for discovering available resource types.
+# Returns metadata about each resource type including available fields,
+# filters, sorting options, and example response structures.
+#
+# Endpoints:
+#   GET /api/v1/resource-types          - List all resource types
+#   GET /api/v1/resource-types/:id      - Documentation for a specific type
+#
 module Api
   module V1
     class ResourceTypesController < BaseController
+      # Lists all available resource types with their URLs
+      #
       def index
         render json: {
           resource_types: RESOURCE_CONFIG.map do |path, config|
@@ -14,6 +25,12 @@ module Api
         }
       end
 
+      # Returns detailed documentation for a single resource type,
+      # including endpoints, parameters, filterable terms, field details,
+      # and an example response structure.
+      #
+      # @param id [String] The resource type path (e.g., "research-briefings")
+      #
       def show
         path = params[:id]
         config = RESOURCE_CONFIG[path]
@@ -52,6 +69,11 @@ module Api
 
       private
 
+      # Builds filter documentation from a model's term type mappings
+      #
+      # @param model_class [Class] The resource model class
+      # @return [Array<Hash>] Filter descriptions with parameter name, label, and example
+      #
       def build_filters_info(model_class)
         model_class::TERM_TYPE_MAPPINGS.map do |key, mapping|
           {
@@ -62,6 +84,12 @@ module Api
         end
       end
 
+      # Builds field documentation showing index fields, all fields,
+      # and whether each field is simple or nested
+      #
+      # @param model_class [Class] The resource model class
+      # @return [Hash] Field metadata including index_fields, all_fields, and field_details
+      #
       def build_fields_info(model_class)
         {
           index_fields: model_class::INDEX_ATTRIBUTES,
@@ -83,6 +111,11 @@ module Api
         }
       end
 
+      # Builds an example response structure showing the shape of API responses
+      #
+      # @param model_class [Class] The resource model class
+      # @return [Hash] Example response with meta, links, and items sections
+      #
       def build_example_response(model_class)
         {
           meta: {
@@ -104,6 +137,11 @@ module Api
         }
       end
 
+      # Builds an example item showing field names and types for index view
+      #
+      # @param model_class [Class] The resource model class
+      # @return [Hash] Example item with placeholder values
+      #
       def build_example_item(model_class)
         example = { id: "string", uri: "string" }
 

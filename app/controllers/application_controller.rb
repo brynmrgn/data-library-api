@@ -1,15 +1,22 @@
+# app/controllers/application_controller.rb
+#
+# Base controller for the application. Runs in API-only mode (no views, sessions, or CSRF).
+# Global SPARQL endpoint configuration is in config/initializers/sparql.rb.
+#
 require 'open-uri'
 
 class ApplicationController < ActionController::API
   include Pagy::Backend
 
-  # Global SPARQL config is in config/initializers/sparql.rb
-
   before_action do
-    #expires_in 3.minutes, :public => true
     create_queries_container
   end
 
+  private
+
+  # Initialises an empty queries array for tracking SPARQL queries
+  # executed during the request (included in API responses for debugging)
+  #
   def create_queries_container
     @queries = []
   end

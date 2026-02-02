@@ -1,7 +1,17 @@
 # app/controllers/api/v1/root_controller.rb
+#
+# API root endpoint. Returns an overview of the API including all available
+# resource types, their endpoints, query parameters, and filtering options.
+# Serves as the entry point for API discovery.
+#
+# Endpoint:
+#   GET /api/v1
+#
 module Api
   module V1
     class RootController < BaseController
+      # Returns API overview with available endpoints, parameters, and filtering info
+      #
       def index
         render json: {
           name: "UK Parliament Linked Data API",
@@ -21,6 +31,11 @@ module Api
 
       private
 
+      # Builds a hash of all available endpoints from RESOURCE_CONFIG,
+      # including the terms endpoint
+      #
+      # @return [Hash] Endpoint descriptions keyed by resource path
+      #
       def build_endpoints
         endpoints = {}
 
@@ -60,6 +75,11 @@ module Api
         endpoints
       end
 
+      # Builds filtering documentation showing how to filter results by
+      # taxonomy terms, with examples and available term types per resource
+      #
+      # @return [Hash] Filtering description, format, examples, and term types
+      #
       def build_filtering_info
         {
           description: "Filter results using query parameters (multiple filters supported)",

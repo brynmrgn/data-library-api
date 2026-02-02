@@ -1,10 +1,10 @@
 # Data Library API
 
-A Rails API that provides a RESTful interface to UK Parliament's linked data resources via SPARQL queries.
+A Rails API that provides a read only API to UK Parliament's linked data resources via SPARQL queries.
 
 ## Overview
 
-This API acts as a middleware layer between clients and the Parliament SPARQL endpoint (`https://data-odp.parliament.uk/sparql`). It provides:
+This API acts as a middleware layer between clients and the Parliament SPARQL endpoint (`https://data-services.parliament.uk/sparql`). It provides:
 
 - Paginated list and detail endpoints for resource types (Research Briefings, Deposited Papers, etc.)
 - Filtering by taxonomy terms (topic, subject, publisher, etc.)
