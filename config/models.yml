@@ -6,6 +6,7 @@
 # Required attributes must be present for an item to be valid.
 
 research-briefings:
+  description: Research and analysis produced by the House of Commons Library and House of Lords Library
   sparql_type: "http://data.parliament.uk/schema/parl#ResearchBriefing"
   base_uri: "http://data.parliament.uk/resources/{id}"
   sort_by: date
@@ -110,6 +111,7 @@ research-briefings:
       nested_predicate: rdfs:seeAlso
 
 deposited-papers:
+  description: Papers deposited in the House of Commons or House of Lords libraries by government departments and other bodies
   sparql_type: "http://data.parliament.uk/schema/parl#DepositedPaper"
   base_uri: "http://data.parliament.uk/depositedpapers/{id}"
   sort_by: dateReceived
