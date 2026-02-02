@@ -54,7 +54,6 @@ gem "bootsnap", require: false
 gem "csv"
 gem "json-ld"
 gem 'pagy', '~> 9.3'
-gem 'elasticsearch', '~> 8.0'
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
