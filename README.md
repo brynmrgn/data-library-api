@@ -35,6 +35,18 @@ git push heroku main
 
 Configuration via environment variables:
 - `SPARQL_ENDPOINT` - Override the default SPARQL endpoint URL
+- `SPARQL_SUBSCRIPTION_KEY` - Subscription key for the SPARQL endpoint (Ocp-Apim-Subscription-Key)
+- `API_KEY` - API key for authenticating requests to this API (if not set, authentication is disabled)
+
+### Authentication
+
+When `API_KEY` is set, all requests must include a valid key in the `X-Api-Key` header:
+
+```bash
+curl -H "X-Api-Key: your-key-here" https://your-app.herokuapp.com/api/v1/research-briefings
+```
+
+Requests without a valid key will receive a `401 Unauthorized` response. Authentication is disabled when `API_KEY` is not set (e.g. local development).
 
 ## API Endpoints
 
