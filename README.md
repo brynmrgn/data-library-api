@@ -130,26 +130,27 @@ Resource types are defined in `config/models.yml`. See [docs/adding-resource-typ
 1. **Edit `config/models.yml`** - Add or modify a resource type definition:
 
 ```yaml
-oral-questions:
-  sparql_type: "http://data.parliament.uk/schema/parl#OralQuestion"
-  base_uri: "http://data.parliament.uk/resources/{id}"
-  sort_by: date
+deposited-papers:
+  description: Papers deposited in the House of Commons or House of Lords libraries
+  sparql_type: "http://data.parliament.uk/schema/parl#DepositedPaper"
+  base_uri: "http://data.parliament.uk/depositedpapers/{id}"
+  sort_by: dateReceived
   sort_order: desc
   sortable_fields:
-    - date
+    - dateReceived
     - title
 
   attributes:
     title: dc-term:title
-    date: dc-term:date
-    topic:
-      uri: parl:topic
+    dateReceived: parl:dateReceived
+    depositingDepartment:
+      uri: parl:department
       properties:
         label: skos:prefLabel
 
   index_attributes:
     - title
-    - date
+    - dateReceived
 
   required_attributes:
     - title
@@ -165,14 +166,14 @@ bin/rails generate:models
 
 ```bash
 bin/rails server
-curl http://localhost:3000/api/v1/oral-questions
+curl http://localhost:3000/api/v1/deposited-papers
 ```
 
 4. **Deploy:**
 
 ```bash
 git add -A
-git commit -m "Add oral questions resource type"
+git commit -m "Add deposited papers resource type"
 git push heroku main
 ```
 

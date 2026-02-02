@@ -12,6 +12,9 @@ Rails.application.routes.draw do
       get "resource-types", to: "resource_types#index"
       get "resource-types/:id", to: "resource_types#show"
 
+      # Full-text search
+      get "search", to: "search#index"
+
       # Terms lookup
       get "terms", to: "terms#index"
       get "terms/:id", to: "terms#show", constraints: { id: /\d+/ }
