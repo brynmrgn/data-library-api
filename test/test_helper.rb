@@ -38,6 +38,12 @@ module ActiveSupport
         "dc-term:title" => "Apprenticeship statistics (England)",
         "dc-term:date" => "2024-12-06",
         "dc-term:abstract" => "Statistics on apprenticeships in England",
+        "dc-term:created" => "2015-03-25T11:24:24+00:00",
+        "dc-term:modified" => "2024-12-06T10:28:10+00:00",
+        "parl:published" => "true",
+        "parl:status" => "published",
+        "parl:disclaimer" => "&lt;p&gt;This information is provided to Members of Parliament.&lt;/p&gt;",
+        "parl:internalLocation" => {"@id" => "http://researchbriefingsintranet.parliament.uk/ResearchBriefing/Summary/SN06113"},
         "parl:relatedLink" => [
           {
             "@id" => "http://data.parliament.uk/resources/344893/relatedlinks/1",

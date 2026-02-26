@@ -20,6 +20,13 @@ class ResearchBriefing < LinkedDataResource
   :content_location => "parl:contentLocation",
   :external_location => "parl:externalLocation",
   :html_summary => "parl:htmlsummary",
+  :abstract => "dc-term:abstract",
+  :created => "dc-term:created",
+  :modified => "dc-term:modified",
+  :published => "parl:published",
+  :status => "parl:status",
+  :disclaimer => "parl:disclaimer",
+  :internal_location => "parl:internalLocation",
   :topic => {
     :uri => "parl:topic",
     :properties => {
@@ -77,10 +84,17 @@ class ResearchBriefing < LinkedDataResource
       :title => "dc-term:title",
       :file_url => "nfo:fileUrl"
     }
+  },
+  :briefing_document => {
+    :uri => "parl:briefingDocument",
+    :properties => {
+      :title => "dc-term:title",
+      :file_url => "nfo:fileUrl"
+    }
   }
 }.freeze
 
-  INDEX_ATTRIBUTES = [:title, :identifier, :description, :date, :publisher, :topic].freeze
+  INDEX_ATTRIBUTES = [:title, :identifier, :description, :abstract, :date, :publisher, :topic].freeze
   REQUIRED_ATTRIBUTES = [:title, :identifier].freeze
 
   TERM_TYPE_MAPPINGS = {
@@ -130,6 +144,7 @@ class ResearchBriefing < LinkedDataResource
         dc-term:title ?title ;
         dc-term:identifier ?identifier ;
         dc-term:description ?description ;
+        dc-term:abstract ?abstract ;
         dc-term:date ?date ;
         dc-term:publisher ?publisher ;
         parl:topic ?topic .
@@ -144,6 +159,7 @@ class ResearchBriefing < LinkedDataResource
       OPTIONAL { ?item dc-term:title ?title . }
         OPTIONAL { ?item dc-term:identifier ?identifier . }
       OPTIONAL { ?item dc-term:description ?description . }
+      OPTIONAL { ?item dc-term:abstract ?abstract . }
       OPTIONAL { ?item dc-term:date ?date . }
       OPTIONAL { ?item dc-term:publisher ?publisher .
           ?publisher skos:prefLabel ?publisher_label .
@@ -188,6 +204,13 @@ class ResearchBriefing < LinkedDataResource
         parl:contentLocation ?content_location ;
         parl:externalLocation ?external_location ;
         parl:htmlsummary ?html_summary ;
+        dc-term:abstract ?abstract ;
+        dc-term:created ?created ;
+        dc-term:modified ?modified ;
+        parl:published ?published ;
+        parl:status ?status ;
+        parl:disclaimer ?disclaimer ;
+        parl:internalLocation ?internal_location ;
         parl:topic ?topic ;
         dc-term:subject ?subject ;
         dc-term:publisher ?publisher ;
@@ -196,7 +219,8 @@ class ResearchBriefing < LinkedDataResource
         parl:category ?category ;
         dc-term:creator ?author ;
         parl:relatedLink ?related_link ;
-        parl:attachment ?attachment .
+        parl:attachment ?attachment ;
+        parl:briefingDocument ?briefing_document .
       ?topic a parl:topic ;
         skos:prefLabel ?topic_label
      .
@@ -228,6 +252,10 @@ class ResearchBriefing < LinkedDataResource
         dc-term:title ?attachment_title ;
         nfo:fileUrl ?attachment_file_url
      .
+      ?briefing_document a parl:briefingDocument ;
+        dc-term:title ?briefing_document_title ;
+        nfo:fileUrl ?briefing_document_file_url
+     .
     }
     WHERE {
       OPTIONAL { ?item dc-term:title ?title . }
@@ -237,6 +265,13 @@ class ResearchBriefing < LinkedDataResource
       OPTIONAL { ?item parl:contentLocation ?content_location . }
       OPTIONAL { ?item parl:externalLocation ?external_location . }
       OPTIONAL { ?item parl:htmlsummary ?html_summary . }
+      OPTIONAL { ?item dc-term:abstract ?abstract . }
+      OPTIONAL { ?item dc-term:created ?created . }
+      OPTIONAL { ?item dc-term:modified ?modified . }
+      OPTIONAL { ?item parl:published ?published . }
+      OPTIONAL { ?item parl:status ?status . }
+      OPTIONAL { ?item parl:disclaimer ?disclaimer . }
+      OPTIONAL { ?item parl:internalLocation ?internal_location . }
       OPTIONAL { ?item parl:topic ?topic .
           ?topic skos:prefLabel ?topic_label .
         }
@@ -267,6 +302,10 @@ class ResearchBriefing < LinkedDataResource
       OPTIONAL { ?item parl:attachment ?attachment .
           ?attachment dc-term:title ?attachment_title .
           ?attachment nfo:fileUrl ?attachment_file_url .
+        }
+      OPTIONAL { ?item parl:briefingDocument ?briefing_document .
+          ?briefing_document dc-term:title ?briefing_document_title .
+          ?briefing_document nfo:fileUrl ?briefing_document_file_url .
         }
     
       {
@@ -305,6 +344,13 @@ class ResearchBriefing < LinkedDataResource
         parl:contentLocation ?content_location ;
         parl:externalLocation ?external_location ;
         parl:htmlsummary ?html_summary ;
+        dc-term:abstract ?abstract ;
+        dc-term:created ?created ;
+        dc-term:modified ?modified ;
+        parl:published ?published ;
+        parl:status ?status ;
+        parl:disclaimer ?disclaimer ;
+        parl:internalLocation ?internal_location ;
         parl:topic ?topic ;
         dc-term:subject ?subject ;
         dc-term:publisher ?publisher ;
@@ -313,7 +359,8 @@ class ResearchBriefing < LinkedDataResource
         parl:category ?category ;
         dc-term:creator ?author ;
         parl:relatedLink ?related_link ;
-        parl:attachment ?attachment .
+        parl:attachment ?attachment ;
+        parl:briefingDocument ?briefing_document .
       ?topic a parl:topic ;
         skos:prefLabel ?topic_label
      .
@@ -345,6 +392,10 @@ class ResearchBriefing < LinkedDataResource
         dc-term:title ?attachment_title ;
         nfo:fileUrl ?attachment_file_url
      .
+      ?briefing_document a parl:briefingDocument ;
+        dc-term:title ?briefing_document_title ;
+        nfo:fileUrl ?briefing_document_file_url
+     .
     }
     WHERE {
       ?item a <http://data.parliament.uk/schema/parl#ResearchBriefing> .
@@ -355,6 +406,13 @@ class ResearchBriefing < LinkedDataResource
       OPTIONAL { ?item parl:contentLocation ?content_location . }
       OPTIONAL { ?item parl:externalLocation ?external_location . }
       OPTIONAL { ?item parl:htmlsummary ?html_summary . }
+      OPTIONAL { ?item dc-term:abstract ?abstract . }
+      OPTIONAL { ?item dc-term:created ?created . }
+      OPTIONAL { ?item dc-term:modified ?modified . }
+      OPTIONAL { ?item parl:published ?published . }
+      OPTIONAL { ?item parl:status ?status . }
+      OPTIONAL { ?item parl:disclaimer ?disclaimer . }
+      OPTIONAL { ?item parl:internalLocation ?internal_location . }
       OPTIONAL { ?item parl:topic ?topic .
           ?topic skos:prefLabel ?topic_label .
         }
@@ -385,6 +443,10 @@ class ResearchBriefing < LinkedDataResource
       OPTIONAL { ?item parl:attachment ?attachment .
           ?attachment dc-term:title ?attachment_title .
           ?attachment nfo:fileUrl ?attachment_file_url .
+        }
+      OPTIONAL { ?item parl:briefingDocument ?briefing_document .
+          ?briefing_document dc-term:title ?briefing_document_title .
+          ?briefing_document nfo:fileUrl ?briefing_document_file_url .
         }
       ?item parl:status ?_rf_value .
           FILTER(LCASE(STR(?_rf_value)) = "published")
@@ -426,6 +488,27 @@ class ResearchBriefing < LinkedDataResource
   "parl:htmlsummary" => {
     "@embed" => "@always"
   },
+  "dc-term:abstract" => {
+    "@embed" => "@always"
+  },
+  "dc-term:created" => {
+    "@embed" => "@always"
+  },
+  "dc-term:modified" => {
+    "@embed" => "@always"
+  },
+  "parl:published" => {
+    "@embed" => "@always"
+  },
+  "parl:status" => {
+    "@embed" => "@always"
+  },
+  "parl:disclaimer" => {
+    "@embed" => "@always"
+  },
+  "parl:internalLocation" => {
+    "@embed" => "@always"
+  },
   "parl:topic" => {
     "@embed" => "@always"
   },
@@ -451,6 +534,9 @@ class ResearchBriefing < LinkedDataResource
     "@embed" => "@always"
   },
   "parl:attachment" => {
+    "@embed" => "@always"
+  },
+  "parl:briefingDocument" => {
     "@embed" => "@always"
   }
 }.freeze

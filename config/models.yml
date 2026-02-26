@@ -30,6 +30,13 @@ research-briefings:
     content_location: parl:contentLocation
     external_location: parl:externalLocation
     html_summary: parl:htmlsummary
+    abstract: dc-term:abstract
+    created: dc-term:created
+    modified: dc-term:modified
+    published: parl:published
+    status: parl:status
+    disclaimer: parl:disclaimer
+    internal_location: parl:internalLocation
 
     # Nested objects
     topic:
@@ -72,11 +79,17 @@ research-briefings:
       properties:
         title: dc-term:title
         file_url: nfo:fileUrl
+    briefing_document:
+      uri: parl:briefingDocument
+      properties:
+        title: dc-term:title
+        file_url: nfo:fileUrl
 
   index_attributes:
     - title
     - identifier
     - description
+    - abstract
     - date
     - publisher
     - topic

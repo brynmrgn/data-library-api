@@ -3,8 +3,15 @@ Rails.application.routes.draw do
 
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # API v1 namespace
+  # API namespaces
   namespace :api do
+    # v0 - LDA compatibility layer (research briefings only)
+    namespace :v0 do
+      get "research-briefings", to: "research_briefings#index", defaults: { format: :json }
+      get "research-briefings/:id", to: "research_briefings#show", defaults: { format: :json }, constraints: { id: /\d+/ }
+    end
+
+    # v1 - current API
     namespace :v1 do
       root "root#index"
 
