@@ -53,7 +53,7 @@ gem "bootsnap", require: false
 
 gem "csv"
 gem "json-ld"
-gem 'pagy', '~> 9.3'
+gem 'pagy', '~> 43.3'
 gem 'dotenv-rails', groups: [:development, :test]
 
 group :development, :test do
