@@ -1,7 +1,10 @@
 # config/models.yml
 # Single source of truth for all Data Library API models
 # Run: rake generate:models to regenerate all model files
-
+#
+# SPARQL resources (default): use sparql_type, base_uri, term_type_mappings
+# REST resources (source: rest): use base_url, api_path, filter_mappings
+#
 # Index attributes are those in the default list response; the item view will show all attributes.
 # Required attributes must be present for an item to be valid.
 
@@ -35,7 +38,7 @@ research-briefings:
     modified: dc-term:modified
     published: parl:published
     status: parl:status
-    disclaimer: parl:disclaimer
+    disclaimer: ov:disclaimer
     internal_location: parl:internalLocation
 
     # Nested objects
@@ -77,13 +80,17 @@ research-briefings:
     attachment:
       uri: parl:attachment
       properties:
-        title: dc-term:title
+        title: parl:attachmentTitle
         file_url: nfo:fileUrl
+        file_size: nfo:fileSize
+        media_type: parl:mediaType
     briefing_document:
       uri: parl:briefingDocument
       properties:
-        title: dc-term:title
+        title: parl:attachmentTitle
         file_url: nfo:fileUrl
+        file_size: nfo:fileSize
+        media_type: parl:mediaType
 
   index_attributes:
     - title
@@ -198,3 +205,562 @@ deposited-papers:
     legislature:
       predicate: parl:legislature
       label: house
+
+committees:
+  description: Select and general committees of the House of Commons and House of Lords
+  source: rest
+  base_url: "https://committees-api.parliament.uk"
+  api_path: "/api/Committees"
+  id_field: id
+  sort_by: name
+  sort_order: asc
+  sortable_fields:
+    - name
+    - start_date
+
+  attributes:
+    # Simple properties
+    name: name
+    house: house
+    show_on_website: showOnWebsite
+    start_date: startDate
+    end_date: endDate
+    date_commons_appointed: dateCommonsAppointed
+    date_lords_appointed: dateLordsAppointed
+    is_lead_committee: isLeadCommittee
+    purpose: purpose
+    lead_house: leadHouse
+
+    # Nested objects
+    category:
+      json_key: category
+      properties:
+        id: id
+        name: name
+    parent_committee:
+      json_key: parentCommittee
+      properties:
+        id: id
+        name: name
+    sub_committees:
+      json_key: subCommittees
+      properties:
+        id: id
+        name: name
+    contact:
+      json_key: contact
+      properties:
+        email: email
+        phone: phone
+        address: address
+    committee_types:
+      json_key: committeeTypes
+      properties:
+        id: id
+        name: name
+    scrutinising_departments:
+      json_key: scrutinisingDepartments
+      properties:
+        department_id: departmentId
+        name: name
+    name_history:
+      json_key: nameHistory
+      properties:
+        id: id
+        name: name
+        start_date: startDate
+        end_date: endDate
+    previous_committees:
+      json_key: previousCommittees
+      properties:
+        id: id
+        name: name
+    content_links:
+      json_key: contentLinks
+      properties:
+        url: url
+        title: title
+
+  index_attributes:
+    - name
+    - house
+    - start_date
+    - end_date
+    - category
+    - committee_types
+
+  required_attributes:
+    - name
+
+  filter_mappings:
+    house:
+      upstream_param: House
+      label: house
+      values: [Commons, Lords]
+    status:
+      upstream_param: CommitteeStatus
+      label: status
+      default: Current
+      values: [Current, All]
+    category:
+      upstream_param: CommitteeCategory
+      label: category
+      values: [Select, General, Other]
+    search:
+      upstream_param: SearchTerm
+      label: search term
+
+committee-business:
+  description: Inquiries, legislative scrutiny, and other committee business
+  source: rest
+  base_url: "https://committees-api.parliament.uk"
+  api_path: "/api/CommitteeBusiness"
+  id_field: id
+  sort_by: open_date
+  sort_order: desc
+  sortable_fields:
+    - open_date
+    - title
+
+  attributes:
+    title: title
+    open_date: openDate
+    close_date: closeDate
+    scope: scope
+    latest_report: latestReport
+    next_oral_evidence_session: nextOralEvidenceSession
+
+    business_type:
+      json_key: type
+      properties:
+        id: id
+        name: name
+        is_inquiry: isInquiry
+    contact:
+      json_key: contact
+      properties:
+        email: email
+        phone: phone
+        address: address
+    open_submission_periods:
+      json_key: openSubmissionPeriods
+      properties:
+        id: id
+        start_date: startDate
+        end_date: endDate
+        submission_type: submissionType
+    closed_submission_periods:
+      json_key: closedSubmissionPeriods
+      properties:
+        id: id
+        start_date: startDate
+        end_date: endDate
+        submission_type: submissionType
+    related_information:
+      json_key: relatedInformation
+      properties:
+        url: url
+        title: title
+
+  index_attributes:
+    - title
+    - open_date
+    - close_date
+    - business_type
+
+  required_attributes:
+    - title
+
+  filter_mappings:
+    committee_id:
+      upstream_param: CommitteeId
+      label: committee ID
+    business_type_id:
+      upstream_param: BusinessTypeId
+      label: business type ID
+    status:
+      upstream_param: Status
+      label: status
+      values: [Open, Closed, All]
+    search:
+      upstream_param: SearchTerm
+      label: search term
+    date_from:
+      upstream_param: DateFrom
+      label: start date from
+    date_to:
+      upstream_param: DateTo
+      label: start date to
+
+events:
+  description: Committee events including oral evidence sessions, meetings, and visits
+  source: rest
+  base_url: "https://committees-api.parliament.uk"
+  api_path: "/api/Events"
+  id_field: id
+  sort_by: start_date
+  sort_order: desc
+  sortable_fields:
+    - start_date
+    - name
+
+  attributes:
+    name: name
+    start_date: startDate
+    end_date: endDate
+    cancelled_date: cancelledDate
+    location: location
+    event_source: eventSource
+    primary_description: primaryDescription
+    secondary_description: secondaryDescription
+    parliament_tv_url: parliamentTvUrl
+
+    event_type:
+      json_key: eventType
+      properties:
+        id: id
+        name: name
+        is_visit: isVisit
+    committees:
+      json_key: committees
+      properties:
+        id: id
+        name: name
+        house: house
+    committee_businesses:
+      json_key: committeeBusinesses
+      properties:
+        id: id
+        title: title
+    activities:
+      json_key: activities
+      properties:
+        id: id
+        name: name
+        start_date: startDate
+        end_date: endDate
+        activity_type: activityType
+        is_private: isPrivate
+
+  index_attributes:
+    - name
+    - start_date
+    - end_date
+    - location
+    - event_type
+    - committees
+
+  required_attributes:
+    - name
+
+  filter_mappings:
+    committee_id:
+      upstream_param: CommitteeId
+      label: committee ID
+    committee_business_id:
+      upstream_param: CommitteeBusinessId
+      label: committee business ID
+    house:
+      upstream_param: House
+      label: house
+      values: [Commons, Lords]
+    start_date_from:
+      upstream_param: StartDateFrom
+      label: start date from
+    start_date_to:
+      upstream_param: StartDateTo
+      label: start date to
+    search:
+      upstream_param: SearchTerm
+      label: search term
+    event_type_id:
+      upstream_param: EventTypeId
+      label: event type ID
+    exclude_cancelled:
+      upstream_param: ExcludeCancelledEvents
+      label: exclude cancelled events
+      values: ["true", "false"]
+
+bill-petitions:
+  description: Petitions submitted to committees on hybrid or private bills
+  source: rest
+  base_url: "https://committees-api.parliament.uk"
+  api_path: "/api/BillPetitions"
+  id_field: id
+  sort_by: publication_date
+  sort_order: desc
+  sortable_fields:
+    - publication_date
+
+  attributes:
+    submission_id: submissionId
+    internal_reference: internalReference
+    publication_date: publicationDate
+    created_date: createdDate
+    outcome: outcome
+
+    committee_business:
+      json_key: committeeBusiness
+      properties:
+        id: id
+        title: title
+    witnesses:
+      json_key: witnesses
+      properties:
+        id: id
+        name: name
+        submitter_type: submitterType
+    document:
+      json_key: document
+      properties:
+        document_id: documentId
+    committees:
+      json_key: committees
+      properties:
+        id: id
+        name: name
+        house: house
+
+  index_attributes:
+    - publication_date
+    - committee_business
+    - committees
+    - witnesses
+
+  required_attributes:
+    - publication_date
+
+  filter_mappings:
+    committee_id:
+      upstream_param: CommitteeId
+      label: committee ID
+    committee_business_id:
+      upstream_param: CommitteeBusinessId
+      label: committee business ID
+    search:
+      upstream_param: SearchTerm
+      label: search term
+    start_date:
+      upstream_param: StartDate
+      label: start date
+    end_date:
+      upstream_param: EndDate
+      label: end date
+
+oral-evidence:
+  description: Transcripts and records of oral evidence given to committees
+  source: rest
+  base_url: "https://committees-api.parliament.uk"
+  api_path: "/api/OralEvidence"
+  id_field: id
+  sort_by: publication_date
+  sort_order: desc
+  sortable_fields:
+    - publication_date
+
+  attributes:
+    activity_id: activityId
+    meeting_date: meetingDate
+    activity_start_date: activityStartDate
+    publication_date: publicationDate
+    legacy_html_url: legacyHtmlUrl
+    legacy_pdf_url: legacyPdfUrl
+
+    committee_businesses:
+      json_key: committeeBusinesses
+      properties:
+        id: id
+        title: title
+    witnesses:
+      json_key: witnesses
+      properties:
+        id: id
+        name: name
+        submitter_type: submitterType
+    document:
+      json_key: document
+      properties:
+        document_id: documentId
+    committees:
+      json_key: committees
+      properties:
+        id: id
+        name: name
+        house: house
+
+  index_attributes:
+    - publication_date
+    - meeting_date
+    - committee_businesses
+    - committees
+    - witnesses
+
+  required_attributes:
+    - publication_date
+
+  filter_mappings:
+    committee_id:
+      upstream_param: CommitteeId
+      label: committee ID
+    committee_business_id:
+      upstream_param: CommitteeBusinessId
+      label: committee business ID
+    search:
+      upstream_param: SearchTerm
+      label: search term
+    start_date:
+      upstream_param: StartDate
+      label: start date
+    end_date:
+      upstream_param: EndDate
+      label: end date
+
+written-evidence:
+  description: Written submissions of evidence to committees
+  source: rest
+  base_url: "https://committees-api.parliament.uk"
+  api_path: "/api/WrittenEvidence"
+  id_field: id
+  sort_by: publication_date
+  sort_order: desc
+  sortable_fields:
+    - publication_date
+
+  attributes:
+    submission_id: submissionId
+    internal_reference: internalReference
+    publication_date: publicationDate
+    anonymous: anonymous
+    anonymous_witness_text: anonymousWitnessText
+    legacy_html_url: legacyHtmlUrl
+    legacy_pdf_url: legacyPdfUrl
+
+    hc_number:
+      json_key: hcNumber
+      properties:
+        number: number
+        session_id: sessionId
+        session_description: sessionDescription
+    committee_business:
+      json_key: committeeBusiness
+      properties:
+        id: id
+        title: title
+    witnesses:
+      json_key: witnesses
+      properties:
+        id: id
+        name: name
+        submitter_type: submitterType
+    document:
+      json_key: document
+      properties:
+        document_id: documentId
+    committees:
+      json_key: committees
+      properties:
+        id: id
+        name: name
+        house: house
+
+  index_attributes:
+    - publication_date
+    - committee_business
+    - committees
+    - witnesses
+
+  required_attributes:
+    - publication_date
+
+  filter_mappings:
+    committee_id:
+      upstream_param: CommitteeId
+      label: committee ID
+    committee_business_id:
+      upstream_param: CommitteeBusinessId
+      label: committee business ID
+    search:
+      upstream_param: SearchTerm
+      label: search term
+    start_date:
+      upstream_param: StartDate
+      label: start date
+    end_date:
+      upstream_param: EndDate
+      label: end date
+
+committee-business-types:
+  description: Types of committee business (inquiry, legislative scrutiny, etc.)
+  source: rest
+  response_format: array
+  base_url: "https://committees-api.parliament.uk"
+  api_path: "/api/CommitteeBusinessType"
+  id_field: id
+  sort_by: name
+  sort_order: asc
+  sortable_fields:
+    - name
+
+  attributes:
+    name: name
+    is_inquiry: isInquiry
+    description: description
+
+  index_attributes:
+    - name
+    - is_inquiry
+    - description
+
+  required_attributes:
+    - name
+
+committee-types:
+  description: Types of parliamentary committees
+  source: rest
+  response_format: array
+  base_url: "https://committees-api.parliament.uk"
+  api_path: "/api/CommitteeType"
+  id_field: id
+  sort_by: name
+  sort_order: asc
+  sortable_fields:
+    - name
+
+  attributes:
+    name: name
+    committee_category:
+      json_key: committeeCategory
+      properties:
+        id: id
+        name: name
+
+  index_attributes:
+    - name
+    - committee_category
+
+  required_attributes:
+    - name
+
+countries:
+  description: Countries and territories (reference data for committee visits)
+  source: rest
+  response_format: array
+  base_url: "https://committees-api.parliament.uk"
+  api_path: "/api/Countries"
+  id_field: id
+  sort_by: name
+  sort_order: asc
+  sortable_fields:
+    - name
+
+  attributes:
+    name: text
+    iso_code: isoCode
+    display_order: displayOrder
+
+  index_attributes:
+    - name
+    - iso_code
+
+  required_attributes:
+    - name

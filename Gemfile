@@ -54,6 +54,7 @@ gem "bootsnap", require: false
 gem "csv"
 gem "json-ld"
 gem 'pagy', '~> 9.3'
+gem 'dotenv-rails', groups: [:development, :test]
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem

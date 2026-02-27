@@ -20,7 +20,8 @@ class SparqlQueryBuilder
     "xsd" => "http://www.w3.org/2001/XMLSchema#",
     "schema" => "http://schema.org/",
     "nfo" => "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#",
-    "foaf" => "http://xmlns.com/foaf/0.1/"
+    "foaf" => "http://xmlns.com/foaf/0.1/",
+    "ov" => "http://open.vocab.org/terms/"
   }.freeze
 
   # Builds a list query with pagination and sorting

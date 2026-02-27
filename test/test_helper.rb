@@ -42,7 +42,7 @@ module ActiveSupport
         "dc-term:modified" => "2024-12-06T10:28:10+00:00",
         "parl:published" => "true",
         "parl:status" => "published",
-        "parl:disclaimer" => "&lt;p&gt;This information is provided to Members of Parliament.&lt;/p&gt;",
+        "ov:disclaimer" => "&lt;p&gt;This information is provided to Members of Parliament.&lt;/p&gt;",
         "parl:internalLocation" => {"@id" => "http://researchbriefingsintranet.parliament.uk/ResearchBriefing/Summary/SN06113"},
         "parl:relatedLink" => [
           {

@@ -26,9 +26,10 @@ Rails.application.routes.draw do
 
       RESOURCE_CONFIG.each do |path, config|
         controller = config[:controller_name]
+        controller_target = config[:source] == 'rest' ? 'rest_api_resource' : 'linked_data_resource'
 
-        get "#{path}", to: "linked_data_resource#index", defaults: { format: :json, controller_name: controller }, as: controller.to_sym
-        get "#{path}/:id", to: "linked_data_resource#show", defaults: { format: :json, controller_name: controller }, as: controller.singularize.to_sym, constraints: { id: /\d+/ }
+        get "#{path}", to: "#{controller_target}#index", defaults: { format: :json, controller_name: controller }, as: controller.to_sym
+        get "#{path}/:id", to: "#{controller_target}#show", defaults: { format: :json, controller_name: controller }, as: controller.singularize.to_sym, constraints: { id: /\d+/ }
       end
     end
   end

@@ -75,12 +75,27 @@ module Api
       # @return [Array<Hash>] Filter descriptions with parameter name, label, and example
       #
       def build_filters_info(model_class)
-        model_class::TERM_TYPE_MAPPINGS.map do |key, mapping|
-          {
-            parameter: key,
-            label: mapping[:label],
-            example: "?#{key}=12345"
-          }
+        if model_class.const_defined?(:FILTER_MAPPINGS) && model_class::FILTER_MAPPINGS.any?
+          # REST API resource - show filter params with allowed values
+          model_class::FILTER_MAPPINGS.map do |key, mapping|
+            info = {
+              parameter: key.to_s,
+              label: mapping[:label],
+              example: "?#{key}=#{mapping[:values]&.first || 'value'}"
+            }
+            info[:values] = mapping[:values] if mapping[:values]
+            info[:default] = mapping[:default] if mapping[:default]
+            info
+          end
+        else
+          # SPARQL resource - show term type mappings
+          model_class::TERM_TYPE_MAPPINGS.map do |key, mapping|
+            {
+              parameter: key,
+              label: mapping[:label],
+              example: "?#{key}=12345"
+            }
+          end
         end
       end
 

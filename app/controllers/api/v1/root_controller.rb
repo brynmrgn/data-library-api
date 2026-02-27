@@ -14,9 +14,9 @@ module Api
       #
       def index
         render json: {
-          name: "UK Parliament Linked Data API",
+          name: "UK Parliament Data Library API",
           version: "v1",
-          description: "API for accessing data from UK Parliament's Linked Data platforms.",
+          description: "API for accessing data from UK Parliament's data platforms.",
           documentation: "#{request.base_url}/api/v1/resource-types",
           endpoints: build_endpoints,
           parameters: {
@@ -25,7 +25,10 @@ module Api
             fields: "Comma-separated list of fields to include, or 'all' for all fields"
           },
           filtering: build_filtering_info,
-          source: "Data from UK Parliament SPARQL endpoint"
+          sources: [
+            "UK Parliament SPARQL endpoint (research briefings, deposited papers)",
+            "UK Parliament Committees API (committees)"
+          ]
         }
       end
 
@@ -41,14 +44,20 @@ module Api
 
         RESOURCE_CONFIG.each do |path, config|
           model_class = config[:model_class].constantize
-          term_types = model_class::TERM_TYPE_MAPPINGS.keys
+
+          # Use FILTER_MAPPINGS keys for REST resources, TERM_TYPE_MAPPINGS for SPARQL
+          filter_keys = if model_class.const_defined?(:FILTER_MAPPINGS) && model_class::FILTER_MAPPINGS.any?
+                          model_class::FILTER_MAPPINGS.keys.map(&:to_s)
+                        else
+                          model_class::TERM_TYPE_MAPPINGS.keys
+                        end
 
           endpoints[path] = {
             list: {
               url: "#{request.base_url}/api/v1/#{path}",
               method: "GET",
               description: "List all #{path.tr('-', ' ')}",
-              filterable_by: term_types
+              filterable_by: filter_keys
             },
             show: {
               url: "#{request.base_url}/api/v1/#{path}/:id",
@@ -86,11 +95,16 @@ module Api
           format: "/api/v1/:resource?:term_type=:term_id",
           examples: [
             "#{request.base_url}/api/v1/research-briefings?topic=123",
-            "#{request.base_url}/api/v1/research-briefings?topic=123&publisher=456"
+            "#{request.base_url}/api/v1/research-briefings?topic=123&publisher=456",
+            "#{request.base_url}/api/v1/committees?house=Commons"
           ],
-          term_types_by_resource: RESOURCE_CONFIG.transform_values do |config|
+          filters_by_resource: RESOURCE_CONFIG.transform_values do |config|
             model_class = config[:model_class].constantize
-            model_class::TERM_TYPE_MAPPINGS.transform_values { |v| v[:label] }
+            if model_class.const_defined?(:FILTER_MAPPINGS) && model_class::FILTER_MAPPINGS.any?
+              model_class::FILTER_MAPPINGS.transform_values { |v| v[:label] }
+            else
+              model_class::TERM_TYPE_MAPPINGS.transform_values { |v| v[:label] }
+            end
           end
         }
       end

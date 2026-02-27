@@ -46,7 +46,7 @@ deposited-papers:                                  # URL path (kebab-case)
       properties:
         label: skos:prefLabel
 
-  # Which attributes appear in list view (keep it light)
+  # Which attributes appear in list view
   index_attributes:
     - abstract
     - identifier

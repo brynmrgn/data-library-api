@@ -87,6 +87,7 @@ class DepositedPaper < LinkedDataResource
     PREFIX schema: <http://schema.org/>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX ov: <http://open.vocab.org/terms/>
     CONSTRUCT {
       ?item a <http://data.parliament.uk/schema/parl#DepositedPaper> ;
         dc-term:abstract ?abstract ;
@@ -138,6 +139,7 @@ class DepositedPaper < LinkedDataResource
     PREFIX schema: <http://schema.org/>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX ov: <http://open.vocab.org/terms/>
     CONSTRUCT {
       ?item a <http://data.parliament.uk/schema/parl#DepositedPaper> ;
         dc-term:title ?title ;
@@ -224,6 +226,7 @@ class DepositedPaper < LinkedDataResource
     PREFIX schema: <http://schema.org/>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX ov: <http://open.vocab.org/terms/>
     CONSTRUCT {
       ?item a <http://data.parliament.uk/schema/parl#DepositedPaper> ;
         dc-term:title ?title ;
@@ -297,7 +300,8 @@ class DepositedPaper < LinkedDataResource
     "xsd" => "http://www.w3.org/2001/XMLSchema#",
     "schema" => "http://schema.org/",
     "nfo" => "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#",
-    "foaf" => "http://xmlns.com/foaf/0.1/"
+    "foaf" => "http://xmlns.com/foaf/0.1/",
+    "ov" => "http://open.vocab.org/terms/"
   },
   "@type" => "http://data.parliament.uk/schema/parl#DepositedPaper",
   "@embed" => "@always",

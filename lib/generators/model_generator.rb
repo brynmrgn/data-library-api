@@ -1,19 +1,18 @@
 # lib/generators/model_generator.rb
 #
 # Code generator that reads config/models.yml and produces:
-#   - A model class per resource type (app/models/<resource>.rb) containing
-#     SPARQL query templates, JSON-LD frame, attribute definitions, and constants
+#   - A model class per resource type (app/models/<resource>.rb)
 #   - A shared route config file (config/resource_config.rb) mapping URL paths
 #     to model classes
 #
+# Supports two source types:
+#   - SPARQL (default): generates LinkedDataResource subclass with SPARQL queries,
+#     JSON-LD frame, and RDF predicate mappings
+#   - REST (source: rest): generates RestApiResource subclass with upstream API
+#     config and JSON field mappings
+#
 # Usage:
 #   bin/rails generate:models
-#
-# Each generated model inherits from LinkedDataResource and includes:
-#   - LIST_QUERY / LIST_QUERY_ALL / SHOW_QUERY - SPARQL CONSTRUCT query templates
-#   - FRAME - JSON-LD frame for shaping responses
-#   - ATTRIBUTES - field name to RDF predicate mappings
-#   - TERM_TYPE_MAPPINGS - filterable taxonomy term configuration
 #
 require 'yaml'
 require 'fileutils'
@@ -28,7 +27,8 @@ class ModelGenerator
     "xsd" => "http://www.w3.org/2001/XMLSchema#",
     "schema" => "http://schema.org/",
     "nfo" => "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#",
-    "foaf" => "http://xmlns.com/foaf/0.1/"
+    "foaf" => "http://xmlns.com/foaf/0.1/",
+    "ov" => "http://open.vocab.org/terms/"
   }.freeze
 
   # Pre-built PREFIX block for SPARQL queries
@@ -51,17 +51,25 @@ class ModelGenerator
       underscored_key = key.to_s.tr('-', '_')
       class_name = underscored_key.classify
       file_name = "#{underscored_key.singularize}.rb"
+      source = model_config['source'] || 'sparql'
 
-      puts "Generating #{class_name}..."
+      puts "Generating #{class_name} (#{source})..."
 
-      # Generate the model file
-      model_code = generate_model(key, model_config)
+      # Generate the model file based on source type
+      model_code = if source == 'rest'
+                     generate_rest_model(key, model_config)
+                   else
+                     generate_model(key, model_config)
+                   end
       File.write(output_dir.join(file_name), model_code)
 
       # Build resource config entry (key is the route path)
+      # Pluralize controller_name to avoid route name collisions
+      # (e.g., "committee_business" singularizes to itself, causing index/show name clash)
       resource_config[key.to_s] = {
-        controller_name: underscored_key,
-        model_class: class_name
+        controller_name: underscored_key.pluralize,
+        model_class: class_name,
+        source: source
       }
     end
 
@@ -137,6 +145,54 @@ class ModelGenerator
     RUBY
   end
 
+  # Generates Ruby source code for a REST API model class
+  #
+  # @param key [String] The resource type key from models.yml (e.g., "committees")
+  # @param config [Hash] The YAML configuration for this resource type
+  # @return [String] Ruby source code for the model file
+  #
+  def self.generate_rest_model(key, config)
+    underscored_key = key.to_s.tr('-', '_')
+    class_name = underscored_key.classify
+
+    attributes = parse_rest_attributes(config['attributes'])
+    index_attrs = config['index_attributes'].map(&:to_sym)
+    required_attrs = config['required_attributes'].map(&:to_sym)
+    filter_mappings = parse_filter_mappings(config['filter_mappings'])
+    response_format_line = config['response_format'] == 'array' ? "\n    API_RESPONSE_FORMAT = \"array\".freeze\n" : ''
+
+    <<~RUBY
+      # app/models/#{underscored_key.singularize}.rb
+      # AUTO-GENERATED from config/models.yml - Do not edit!
+      # Run: rake generate:models
+
+      class #{class_name} < RestApiResource
+        BASE_URL = #{config['base_url'].inspect}.freeze
+        API_PATH = #{config['api_path'].inspect}.freeze
+        ID_FIELD = #{(config['id_field'] || 'id').inspect}.freeze
+
+        DEFAULT_SORT_FIELD = :#{config['sort_by']}
+        DEFAULT_SORT_ORDER = :#{config['sort_order'] || 'asc'}
+        SORTABLE_FIELDS = #{(config['sortable_fields'] || [config['sort_by']]).map(&:to_sym).inspect}.freeze
+
+        ATTRIBUTES = #{format_hash(attributes)}.freeze
+
+        INDEX_ATTRIBUTES = #{index_attrs.inspect}.freeze
+        REQUIRED_ATTRIBUTES = #{required_attrs.inspect}.freeze
+
+        TERM_TYPE_MAPPINGS = {}.freeze
+
+        FILTER_MAPPINGS = #{format_hash(filter_mappings)}.freeze
+    #{response_format_line}
+        def self.construct_uri(id)
+          "\#{BASE_URL}\#{API_PATH}/\#{id}"
+        end
+
+        finalize_attributes!
+      end
+    RUBY
+  end
+
   # Generates the RESOURCE_CONFIG constant mapping URL paths to model classes
   #
   # @param config [Hash] Map of route paths to controller/model info
@@ -154,7 +210,47 @@ class ModelGenerator
 
   private
 
-  # Converts YAML attribute config into a Ruby hash.
+  # Converts YAML attribute config for REST resources into a Ruby hash.
+  # Simple attributes become { name: "json_field" }.
+  # Nested attributes become { name: { json_key: "field", properties: { ... } } }.
+  #
+  # @param attrs_config [Hash] Raw attributes from YAML
+  # @return [Hash] Parsed attributes with symbol keys
+  #
+  def self.parse_rest_attributes(attrs_config)
+    result = {}
+    attrs_config.each do |name, value|
+      if value.is_a?(Hash)
+        result[name.to_sym] = {
+          json_key: value['json_key'],
+          properties: value['properties'].transform_keys(&:to_sym)
+        }
+      else
+        result[name.to_sym] = value
+      end
+    end
+    result
+  end
+
+  # Converts YAML filter mappings for REST resources into a Ruby hash.
+  #
+  # @param mappings_config [Hash, nil] Raw filter mappings from YAML
+  # @return [Hash] Parsed mappings with upstream_param, label, default, values
+  #
+  def self.parse_filter_mappings(mappings_config)
+    return {} unless mappings_config
+
+    result = {}
+    mappings_config.each do |name, value|
+      entry = { upstream_param: value['upstream_param'], label: value['label'] }
+      entry[:default] = value['default'] if value['default']
+      entry[:values] = value['values'] if value['values']
+      result[name.to_sym] = entry
+    end
+    result
+  end
+
+  # Converts YAML attribute config for SPARQL resources into a Ruby hash.
   # Simple attributes become { name: "predicate" }.
   # Nested attributes become { name: { uri: "predicate", properties: { ... } } }.
   #

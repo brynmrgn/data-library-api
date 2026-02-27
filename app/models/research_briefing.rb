@@ -25,7 +25,7 @@ class ResearchBriefing < LinkedDataResource
   :modified => "dc-term:modified",
   :published => "parl:published",
   :status => "parl:status",
-  :disclaimer => "parl:disclaimer",
+  :disclaimer => "ov:disclaimer",
   :internal_location => "parl:internalLocation",
   :topic => {
     :uri => "parl:topic",
@@ -81,15 +81,19 @@ class ResearchBriefing < LinkedDataResource
   :attachment => {
     :uri => "parl:attachment",
     :properties => {
-      :title => "dc-term:title",
-      :file_url => "nfo:fileUrl"
+      :title => "parl:attachmentTitle",
+      :file_url => "nfo:fileUrl",
+      :file_size => "nfo:fileSize",
+      :media_type => "parl:mediaType"
     }
   },
   :briefing_document => {
     :uri => "parl:briefingDocument",
     :properties => {
-      :title => "dc-term:title",
-      :file_url => "nfo:fileUrl"
+      :title => "parl:attachmentTitle",
+      :file_url => "nfo:fileUrl",
+      :file_size => "nfo:fileSize",
+      :media_type => "parl:mediaType"
     }
   }
 }.freeze
@@ -139,6 +143,7 @@ class ResearchBriefing < LinkedDataResource
     PREFIX schema: <http://schema.org/>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX ov: <http://open.vocab.org/terms/>
     CONSTRUCT {
       ?item a <http://data.parliament.uk/schema/parl#ResearchBriefing> ;
         dc-term:title ?title ;
@@ -195,6 +200,7 @@ class ResearchBriefing < LinkedDataResource
     PREFIX schema: <http://schema.org/>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX ov: <http://open.vocab.org/terms/>
     CONSTRUCT {
       ?item a <http://data.parliament.uk/schema/parl#ResearchBriefing> ;
         dc-term:title ?title ;
@@ -209,7 +215,7 @@ class ResearchBriefing < LinkedDataResource
         dc-term:modified ?modified ;
         parl:published ?published ;
         parl:status ?status ;
-        parl:disclaimer ?disclaimer ;
+        ov:disclaimer ?disclaimer ;
         parl:internalLocation ?internal_location ;
         parl:topic ?topic ;
         dc-term:subject ?subject ;
@@ -249,12 +255,16 @@ class ResearchBriefing < LinkedDataResource
         rdfs:label ?related_link_label
      .
       ?attachment a parl:attachment ;
-        dc-term:title ?attachment_title ;
-        nfo:fileUrl ?attachment_file_url
+        parl:attachmentTitle ?attachment_title ;
+        nfo:fileUrl ?attachment_file_url ;
+        nfo:fileSize ?attachment_file_size ;
+        parl:mediaType ?attachment_media_type
      .
       ?briefing_document a parl:briefingDocument ;
-        dc-term:title ?briefing_document_title ;
-        nfo:fileUrl ?briefing_document_file_url
+        parl:attachmentTitle ?briefing_document_title ;
+        nfo:fileUrl ?briefing_document_file_url ;
+        nfo:fileSize ?briefing_document_file_size ;
+        parl:mediaType ?briefing_document_media_type
      .
     }
     WHERE {
@@ -270,7 +280,7 @@ class ResearchBriefing < LinkedDataResource
       OPTIONAL { ?item dc-term:modified ?modified . }
       OPTIONAL { ?item parl:published ?published . }
       OPTIONAL { ?item parl:status ?status . }
-      OPTIONAL { ?item parl:disclaimer ?disclaimer . }
+      OPTIONAL { ?item ov:disclaimer ?disclaimer . }
       OPTIONAL { ?item parl:internalLocation ?internal_location . }
       OPTIONAL { ?item parl:topic ?topic .
           ?topic skos:prefLabel ?topic_label .
@@ -300,12 +310,16 @@ class ResearchBriefing < LinkedDataResource
           ?related_link rdfs:label ?related_link_label .
         }
       OPTIONAL { ?item parl:attachment ?attachment .
-          ?attachment dc-term:title ?attachment_title .
+          ?attachment parl:attachmentTitle ?attachment_title .
           ?attachment nfo:fileUrl ?attachment_file_url .
+          ?attachment nfo:fileSize ?attachment_file_size .
+          ?attachment parl:mediaType ?attachment_media_type .
         }
       OPTIONAL { ?item parl:briefingDocument ?briefing_document .
-          ?briefing_document dc-term:title ?briefing_document_title .
+          ?briefing_document parl:attachmentTitle ?briefing_document_title .
           ?briefing_document nfo:fileUrl ?briefing_document_file_url .
+          ?briefing_document nfo:fileSize ?briefing_document_file_size .
+          ?briefing_document parl:mediaType ?briefing_document_media_type .
         }
     
       {
@@ -335,6 +349,7 @@ class ResearchBriefing < LinkedDataResource
     PREFIX schema: <http://schema.org/>
     PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX ov: <http://open.vocab.org/terms/>
     CONSTRUCT {
       ?item a <http://data.parliament.uk/schema/parl#ResearchBriefing> ;
         dc-term:title ?title ;
@@ -349,7 +364,7 @@ class ResearchBriefing < LinkedDataResource
         dc-term:modified ?modified ;
         parl:published ?published ;
         parl:status ?status ;
-        parl:disclaimer ?disclaimer ;
+        ov:disclaimer ?disclaimer ;
         parl:internalLocation ?internal_location ;
         parl:topic ?topic ;
         dc-term:subject ?subject ;
@@ -389,12 +404,16 @@ class ResearchBriefing < LinkedDataResource
         rdfs:label ?related_link_label
      .
       ?attachment a parl:attachment ;
-        dc-term:title ?attachment_title ;
-        nfo:fileUrl ?attachment_file_url
+        parl:attachmentTitle ?attachment_title ;
+        nfo:fileUrl ?attachment_file_url ;
+        nfo:fileSize ?attachment_file_size ;
+        parl:mediaType ?attachment_media_type
      .
       ?briefing_document a parl:briefingDocument ;
-        dc-term:title ?briefing_document_title ;
-        nfo:fileUrl ?briefing_document_file_url
+        parl:attachmentTitle ?briefing_document_title ;
+        nfo:fileUrl ?briefing_document_file_url ;
+        nfo:fileSize ?briefing_document_file_size ;
+        parl:mediaType ?briefing_document_media_type
      .
     }
     WHERE {
@@ -411,7 +430,7 @@ class ResearchBriefing < LinkedDataResource
       OPTIONAL { ?item dc-term:modified ?modified . }
       OPTIONAL { ?item parl:published ?published . }
       OPTIONAL { ?item parl:status ?status . }
-      OPTIONAL { ?item parl:disclaimer ?disclaimer . }
+      OPTIONAL { ?item ov:disclaimer ?disclaimer . }
       OPTIONAL { ?item parl:internalLocation ?internal_location . }
       OPTIONAL { ?item parl:topic ?topic .
           ?topic skos:prefLabel ?topic_label .
@@ -441,12 +460,16 @@ class ResearchBriefing < LinkedDataResource
           ?related_link rdfs:label ?related_link_label .
         }
       OPTIONAL { ?item parl:attachment ?attachment .
-          ?attachment dc-term:title ?attachment_title .
+          ?attachment parl:attachmentTitle ?attachment_title .
           ?attachment nfo:fileUrl ?attachment_file_url .
+          ?attachment nfo:fileSize ?attachment_file_size .
+          ?attachment parl:mediaType ?attachment_media_type .
         }
       OPTIONAL { ?item parl:briefingDocument ?briefing_document .
-          ?briefing_document dc-term:title ?briefing_document_title .
+          ?briefing_document parl:attachmentTitle ?briefing_document_title .
           ?briefing_document nfo:fileUrl ?briefing_document_file_url .
+          ?briefing_document nfo:fileSize ?briefing_document_file_size .
+          ?briefing_document parl:mediaType ?briefing_document_media_type .
         }
       ?item parl:status ?_rf_value .
           FILTER(LCASE(STR(?_rf_value)) = "published")
@@ -463,7 +486,8 @@ class ResearchBriefing < LinkedDataResource
     "xsd" => "http://www.w3.org/2001/XMLSchema#",
     "schema" => "http://schema.org/",
     "nfo" => "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#",
-    "foaf" => "http://xmlns.com/foaf/0.1/"
+    "foaf" => "http://xmlns.com/foaf/0.1/",
+    "ov" => "http://open.vocab.org/terms/"
   },
   "@type" => "http://data.parliament.uk/schema/parl#ResearchBriefing",
   "@embed" => "@always",
@@ -503,7 +527,7 @@ class ResearchBriefing < LinkedDataResource
   "parl:status" => {
     "@embed" => "@always"
   },
-  "parl:disclaimer" => {
+  "ov:disclaimer" => {
     "@embed" => "@always"
   },
   "parl:internalLocation" => {
