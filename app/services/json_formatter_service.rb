@@ -1,10 +1,10 @@
 # app/services/json_formatter_service.rb
 #
-# Formats LinkedDataResource objects into clean JSON API responses.
-# Transforms JSON-LD data into a simplified structure based on model ATTRIBUTES.
+# Formats resource objects into clean JSON API responses.
+# Works with both LinkedDataResource (SPARQL) and RestApiResource (REST) items.
 #
 # Features:
-#   - Unwraps JSON-LD @value structures
+#   - Unwraps JSON-LD @value structures (SPARQL resources)
 #   - Extracts nested object properties (topics, authors, etc.)
 #   - Sorts nested items (terms alphabetically, sub-objects by position)
 #   - Supports index (summary) and show (full) views
@@ -93,29 +93,42 @@ end
   end
 
   # Extracts specific properties from a nested object
-  # @param obj [Hash] The nested object from the JSON-LD response
-  # @param properties [Hash] Map of property names to their predicates
+  # @param obj [Hash] The nested object (JSON-LD or plain JSON)
+  # @param properties [Hash] Map of property names to their keys/predicates
   # @return [Hash] Extracted properties with id
   #
   def self.extract_nested_properties(obj, properties)
     return obj unless obj.is_a?(Hash)
     
-    nested = { id: obj['@id'] }
-    
-    properties.each do |prop_name, predicate|
-      nested[prop_name] = obj[predicate] if obj[predicate]
+    obj_id = obj['@id'] || obj['id']
+    nested = obj_id ? { id: obj_id } : {}
+
+    properties.each do |prop_name, key|
+      val = obj[key]
+      next if val.nil?
+      nested[prop_name] = unwrap_value(val)
     end
-    
+
     nested
   end
   
-  # Unwraps JSON-LD @value/@type structures
+  # Unwraps JSON-LD @value/@type and @id structures
   # @param value [Object] The value to format
   # @return [Object] The unwrapped value
   #
   def self.format_simple_value(value)
-    if value.is_a?(Hash) && value['@value']
+    unwrap_value(value)
+  end
+
+  # Unwraps JSON-LD wrappers to plain values
+  # { "@value" => "x" } => "x"
+  # { "@id" => "http://..." } => "http://..."
+  #
+  def self.unwrap_value(value)
+    if value.is_a?(Hash) && value.key?('@value')
       value['@value']
+    elsif value.is_a?(Hash) && value.key?('@id') && value.keys.size == 1
+      value['@id']
     else
       value
     end

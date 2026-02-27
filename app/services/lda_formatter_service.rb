@@ -47,6 +47,25 @@ class LdaFormatterService
   # Nested fields that the LDA always returns as arrays (even for single items)
   ALWAYS_ARRAY_FIELDS = %i[section].freeze
 
+  # LDA property name overrides for nested objects (where camelize doesn't match)
+  LDA_NESTED_NAME_OVERRIDES = {
+    related_link: { url: "website", label: "label" },
+    attachment: { title: "attachmentTitle", file_size: "sizeOfFile" },
+    briefing_document: { title: "attachmentTitle", file_size: "sizeOfFile" }
+  }.freeze
+
+  # Nested properties that the LDA returns as plain strings (no _value wrapping)
+  LDA_PLAIN_NESTED_FIELDS = {
+    attachment: %i[title media_type],
+    briefing_document: %i[title media_type]
+  }.freeze
+
+  # Nested properties that the LDA returns as integer arrays
+  LDA_INTEGER_ARRAY_FIELDS = {
+    attachment: %i[file_size],
+    briefing_document: %i[file_size]
+  }.freeze
+
 
   DATE_PATTERN = /\A\d{4}-\d{2}-\d{2}/
 
@@ -206,21 +225,26 @@ class LdaFormatterService
     return obj unless obj.is_a?(Hash)
 
     nested = { "_about" => obj['@id'] }
+    overrides = LDA_NESTED_NAME_OVERRIDES[attr_name] || {}
+    plain_fields = LDA_PLAIN_NESTED_FIELDS[attr_name] || []
+    int_array_fields = LDA_INTEGER_ARRAY_FIELDS[attr_name] || []
 
     properties.each do |prop_name, predicate|
       raw_value = obj[predicate]
       next unless raw_value
 
-      if prop_name == :label
-        nested["prefLabel"] = wrap_value(raw_value)
-      else
-        lda_prop_name = prop_name.to_s.camelize(:lower)
+      # Use override name if present, otherwise :label → "prefLabel", else camelize
+      lda_prop_name = overrides[prop_name] ||
+        (prop_name == :label ? "prefLabel" : prop_name.to_s.camelize(:lower))
 
-        if raw_value.is_a?(Hash) && raw_value['@id']
-          nested[lda_prop_name] = raw_value['@id']
-        else
-          nested[lda_prop_name] = wrap_value(raw_value)
-        end
+      if int_array_fields.include?(prop_name)
+        nested[lda_prop_name] = [extract_raw_value(raw_value).to_i]
+      elsif plain_fields.include?(prop_name)
+        nested[lda_prop_name] = extract_raw_value(raw_value)
+      elsif raw_value.is_a?(Hash) && raw_value['@id']
+        nested[lda_prop_name] = raw_value['@id']
+      else
+        nested[lda_prop_name] = wrap_value(raw_value)
       end
     end
 
