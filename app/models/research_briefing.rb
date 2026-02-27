@@ -98,7 +98,7 @@ class ResearchBriefing < LinkedDataResource
   }
 }.freeze
 
-  INDEX_ATTRIBUTES = [:title, :identifier, :description, :abstract, :date, :publisher, :topic].freeze
+  INDEX_ATTRIBUTES = [:title, :identifier, :description, :abstract, :date, :publisher, :topic, :section, :subtype].freeze
   REQUIRED_ATTRIBUTES = [:title, :identifier].freeze
 
   TERM_TYPE_MAPPINGS = {
@@ -152,12 +152,20 @@ class ResearchBriefing < LinkedDataResource
         dc-term:abstract ?abstract ;
         dc-term:date ?date ;
         dc-term:publisher ?publisher ;
-        parl:topic ?topic .
+        parl:topic ?topic ;
+        parl:section ?section ;
+        parl:subtype ?subtype .
       ?publisher a dc-term:publisher ;
         skos:prefLabel ?publisher_label
      .
       ?topic a parl:topic ;
         skos:prefLabel ?topic_label
+     .
+      ?section a parl:section ;
+        skos:prefLabel ?section_label
+     .
+      ?subtype a parl:subtype ;
+        skos:prefLabel ?subtype_label
      .
     }
     WHERE {
@@ -171,6 +179,12 @@ class ResearchBriefing < LinkedDataResource
         }
       OPTIONAL { ?item parl:topic ?topic .
           ?topic skos:prefLabel ?topic_label .
+        }
+      OPTIONAL { ?item parl:section ?section .
+          ?section skos:prefLabel ?section_label .
+        }
+      OPTIONAL { ?item parl:subtype ?subtype .
+          ?subtype skos:prefLabel ?subtype_label .
         }
     
       {

@@ -10,6 +10,7 @@
 # Query parameters:
 #   _page      - Page number, zero-indexed (default: 0)
 #   _pageSize  - Items per page (default: 10, max: 500)
+#   _properties - Use "*" to include all fields (default: index fields only)
 #   <term>     - Filter by taxonomy term (e.g., ?topic=12345)
 #
 module Api
@@ -39,7 +40,7 @@ module Api
           filter,
           limit: items_per_page,
           offset: @pagy.offset,
-          all_fields: true,
+          all_fields: params[:_properties] == '*',
           sort_field: sort_field,
           sort_order: sort_order
         )
